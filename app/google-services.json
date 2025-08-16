@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "182364379485",
+    "project_id": "desapapos-320d8",
+    "storage_bucket": "desapapos-320d8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182364379485:android:08095cbbf89008253c30b4",
+        "android_client_info": {
+          "package_name": "com.desapabandara.pos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQy4Q9pXO4KokrMCPST-XqTGQervSptps"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

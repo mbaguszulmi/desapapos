@@ -1,0 +1,16 @@
+package com.desapabandara.pos.local_db.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity
+data class PaymentMethodEntity(
+    @PrimaryKey
+    var id: String,
+    var name: String,
+    var paymentMethodType: Int,
+    var isActive: Boolean,
+    override var createdAt: Long = System.currentTimeMillis(),
+    override var deletedAt: Long? = null,
+    override var updatedAt: Long = System.currentTimeMillis(),
+): BaseEntity()

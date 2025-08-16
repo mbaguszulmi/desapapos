@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="posVM"
+            type="com.desapabandara.pos.ui.viewmodel.PosViewModel" />
+
+        <import type="android.view.View"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <include
+            android:id="@+id/main_top_bar"
+            layout="@layout/layout_top_bar"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/category_guide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent=".33"/>
+
+        <View
+            android:id="@+id/order_info_bg"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            app:layout_constraintTop_toBottomOf="@id/main_top_bar"
+            android:background="@color/white"
+            android:elevation="4dp"/>
+
+        <TextView
+            android:id="@+id/order_number_bg"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:text="No"
+            app:layout_constraintTop_toTopOf="@id/order_info_bg"
+            app:layout_constraintStart_toStartOf="@id/order_info_bg"
+            android:background="@color/grey_e4"
+            android:elevation="5dp"
+            android:gravity="center|top"
+            android:textSize="12sp"
+            android:paddingTop="4dp"
+            android:fontFamily="sans-serif-medium"/>
+
+        <View
+            android:id="@+id/btn_add_customer"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@id/order_info_bg"
+            app:layout_constraintBottom_toBottomOf="@id/order_info_bg"
+            app:layout_constraintStart_toEndOf="@id/order_number_bg"
+            app:layout_constraintEnd_toEndOf="@id/category_guide"
+            android:onClick="@{() -> posVM.showAddCustomer()}"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@id/order_number_bg"
+            app:layout_constraintStart_toStartOf="@id/order_number_bg"
+            app:layout_constraintBottom_toBottomOf="@id/order_number_bg"
+            app:layout_constraintEnd_toEndOf="@id/order_number_bg"
+            tools:text="10"
+            android:text="@{posVM.currentOrderNumber}"
+            android:gravity="bottom|center"
+            android:elevation="6dp"
+            android:paddingBottom="3dp"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black"/>
+
+        <ImageView
+            android:id="@+id/iv_person"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_person"
+            app:layout_constraintTop_toTopOf="@id/btn_add_customer"
+            app:layout_constraintStart_toEndOf="@id/order_number_bg"
+            android:elevation="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginStart="2dp"/>
+
+        <TextView
+            android:id="@+id/customer_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="0"
+            android:text="@{`` + posVM.customerCount}"
+            app:layout_constraintTop_toTopOf="@id/iv_person"
+            app:layout_constraintStart_toEndOf="@id/iv_person"
+            app:layout_constraintBottom_toBottomOf="@id/iv_person"
+            android:textColor="@color/black_1a"
+            android:elevation="4dp"/>
+
+        <TextView
+            android:id="@+id/customer_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            tools:text="Lorem ipsum dolor sit amet"
+            android:text="@{posVM.customerName}"
+            app:layout_constraintTop_toBottomOf="@id/iv_person"
+            app:layout_constraintStart_toStartOf="@id/iv_person"
+            app:layout_constraintEnd_toEndOf="@id/btn_add_customer"
+            app:layout_constraintBottom_toBottomOf="@id/btn_add_customer"
+            android:layout_marginEnd="2dp"
+            android:layout_marginStart="2dp"
+            android:textColor="@color/black_1a"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:elevation="4dp"/>
+
+        <TextView
+            android:id="@+id/btn_order_type"
+            android:layout_width="70dp"
+            android:layout_height="48dp"
+            tools:text="Eat In"
+            orderTypeText="@{posVM.orderType}"
+            app:layout_constraintTop_toTopOf="@id/order_info_bg"
+            app:layout_constraintEnd_toEndOf="@id/order_info_bg"
+            android:background="@color/white"
+            android:elevation="5dp"
+            android:gravity="center|top"
+            android:textSize="12sp"
+            android:paddingTop="4dp"
+            android:fontFamily="sans-serif-medium"
+            android:onClick="@{() -> posVM.changeOrderType()}"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@id/btn_order_type"
+            app:layout_constraintStart_toStartOf="@id/btn_order_type"
+            app:layout_constraintBottom_toBottomOf="@id/btn_order_type"
+            app:layout_constraintEnd_toEndOf="@id/btn_order_type"
+            tools:text="10"
+            android:text="@{posVM.tableNumber}"
+            android:gravity="bottom|center"
+            android:elevation="6dp"
+            android:paddingBottom="3dp"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black"/>
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/category_rv"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toBottomOf="@id/order_info_bg"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/category_guide"/>
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/product_container"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@id/category_rv"
+            app:layout_constraintBottom_toBottomOf="@id/category_rv"
+            app:layout_constraintStart_toEndOf="@id/category_rv"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:background="@color/grey_e4"/>
+
+        <include
+            android:id="@+id/order_summary_button"
+            layout="@layout/layout_order_summary_button"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_margin="16dp"
+            android:visibility="@{posVM.orderItemCount == 0 ? View.GONE : View.VISIBLE}"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="posVM"
+            type="com.desapabandara.pos.ui.viewmodel.PosViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_primary_rounded"
+        android:onClick="@{() -> posVM.showOrderItems()}">
+
+        <ImageView
+            android:id="@+id/iv_shopping_cart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_shopping_cart"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="10"
+            android:text="@{`` + posVM.orderItemCount}"
+            android:textColor="@color/white"
+            android:background="@drawable/bg_counter"
+            android:textSize="14sp"
+            android:padding="5dp"
+            android:minWidth="28dp"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="@id/iv_shopping_cart"
+            app:layout_constraintEnd_toEndOf="@id/iv_shopping_cart"
+            android:layout_marginTop="-10dp"
+            android:layout_marginEnd="-16dp"
+            android:fontFamily="sans-serif-medium"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Rp100.000"
+            android:text="@{posVM.currentOrderTotal}"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="16dp"
+            android:fontFamily="sans-serif-medium"
+            android:textSize="18sp"
+            android:textColor="@color/white"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

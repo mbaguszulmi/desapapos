@@ -1,0 +1,366 @@
+package com.desapabandara.pos.printer.manager
+
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import co.mbznetwork.android.base.di.IoDispatcher
+import co.mbznetwork.android.base.eventbus.UIStatusEventBus
+import co.mbznetwork.android.base.model.UiMessage
+import co.mbznetwork.android.base.model.UiStatus
+import com.dantsu.escposprinter.EscPosPrinter
+import com.dantsu.escposprinter.EscPosPrinterCommands
+import com.dantsu.escposprinter.connection.DeviceConnection
+import com.dantsu.escposprinter.connection.bluetooth.BluetoothConnection
+import com.dantsu.escposprinter.connection.bluetooth.BluetoothPrintersConnections
+import com.desapabandara.pos.base.eventbus.OrderPrintEventBus
+import com.desapabandara.pos.base.manager.OrderManager
+import com.desapabandara.pos.base.model.ItemStatus
+import com.desapabandara.pos.local_db.dao.LocationDao
+import com.desapabandara.pos.local_db.dao.PrinterDao
+import com.desapabandara.pos.local_db.dao.PrinterLocationDao
+import com.desapabandara.pos.local_db.dao.PrinterTemplateDao
+import com.desapabandara.pos.local_db.dao.ProductDao
+import com.desapabandara.pos.local_db.entity.PrinterEntity
+import com.desapabandara.pos.local_db.entity.PrinterLocationEntity
+import com.desapabandara.pos.printer.R
+import com.desapabandara.pos.printer.model.PaperWidth
+import com.desapabandara.pos.printer.model.PrintTask
+import com.desapabandara.pos.printer.model.PrinterConnection
+import com.desapabandara.pos.printer.model.PrinterDevice
+import com.desapabandara.pos.printer.model.PrinterInterfaceType
+import com.desapabandara.pos.printer.util.MyBluetoothPrintersConnections
+import com.desapabandara.pos.printer.util.OrderPrintParser
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
+
+
+@Singleton
+class PrinterManager @Inject constructor(
+    @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    private val bluetoothAdapter: BluetoothAdapter?,
+    private val printerDao: PrinterDao,
+    private val printerLocationDao: PrinterLocationDao,
+    private val orderPrintEventBus: OrderPrintEventBus,
+    private val productDao: ProductDao,
+    private val locationDao: LocationDao,
+    private val printerTemplateDao: PrinterTemplateDao,
+    private val orderPrintParser: OrderPrintParser,
+    private val orderManager: OrderManager,
+    private val uiStatusEventBus: UIStatusEventBus
+) {
+    private val scope = CoroutineScope(ioDispatcher + SupervisorJob())
+    private val mainPrinterDevices = mutableMapOf<String, PrinterDevice>()
+
+    private var lastPrinterObservedDate: Long? = null
+
+    fun initiateConnections() {
+        observeSavedDevices()
+        observePrinterConnectionStatus()
+        observePrintJob()
+    }
+
+    private fun observePrintJob() {
+        scope.launch {
+            orderPrintEventBus.printJob.collect {
+                val posCounterLocation = locationDao.getLocation("1") ?: return@collect
+                val locationsListed = (listOf(posCounterLocation) + it.order.orderItems.mapNotNull { item ->
+                    productDao.getProductById(item.productId)?.locationId?.let { locationId ->
+                        locationDao.getLocation(locationId)
+                    }
+                }).distinctBy { location ->
+                    location.id
+                }
+
+                val printTasks = locationsListed.flatMap { location ->
+                    val devices = getPrinterDevicesByLocationId(location.id)
+                    printerTemplateDao.getPrinterTemplate(location.printerTemplateId)?.let { printerTemplate ->
+                        if (location.id == "1") {
+                            devices.map { device ->
+                                PrintTask(
+                                    location,
+                                    device,
+                                    it.order,
+                                    it.reprint,
+                                    it.schedulePrint,
+                                    printerTemplate
+                                )
+                            }
+                        } else {
+                            val order = it.order.copy(
+                                orderItems = it.order.orderItems.filter { item ->
+                                    if (item.status != ItemStatus.New) return@filter false
+
+                                    val product = productDao.getProductById(item.productId)
+                                    product?.locationId == location.id
+                                }
+                            )
+
+                            if (order.orderItems.isEmpty()) return@flatMap emptyList()
+
+                            devices.map { device ->
+                                PrintTask(
+                                    location,
+                                    device,
+                                    order,
+                                    it.reprint,
+                                    it.schedulePrint,
+                                    printerTemplate
+                                )
+                            }
+                        }
+                    } ?: emptyList()
+                }
+
+                var isSucceeded = true
+
+                printTasks.forEach { task ->
+                    val parsedText = orderPrintParser.parseFromTask(task)
+
+                    if (!printFormatted(
+                        parsedText,
+                        task.printerDevice.printerData.id,
+                        if (task.location.id == "") {
+                            0f
+                        } else {
+                            15f
+                        },
+                        task.location.id == ""
+                    )) {
+                        isSucceeded = false
+                    } else {
+                        orderManager.markItemsSentAndPrinted(it.order.id, task.order.orderItems.map { item ->
+                            item.id
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getPrinterDevicesByLocationId(locationId: String): List<PrinterDevice> {
+        return mainPrinterDevices.values.filter {
+            it.locations.any { l -> l.id == locationId }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun observePrinterConnectionStatus() {
+        scope.launch {
+            while (true) {
+                mainPrinterDevices.values.forEach {
+                    val isDeviceConnected = it.deviceConnection.let { conn ->
+                        if (conn is BluetoothConnection) {
+                            bluetoothAdapter?.isEnabled == true && conn.isConnected
+                        } else {
+                            conn.isConnected
+                        }
+                    }
+
+                    if (isDeviceConnected != it.printerData.isConnected) {
+                        printerDao.update(it.printerData.apply {
+                            isConnected = isDeviceConnected
+                        })
+                    }
+                }
+
+                delay(10000)
+            }
+        }
+    }
+
+    private fun observeSavedDevices() {
+        scope.launch {
+            while(true) {
+                val lastObservedDate = lastPrinterObservedDate
+                val printers = if (lastObservedDate == null) {
+                    printerDao.getAll().first()
+                } else {
+                    printerDao.getPrinterAfterDate(lastObservedDate).first()
+                }
+
+                val updatedLastObservedDate = System.currentTimeMillis()
+                lastPrinterObservedDate = updatedLastObservedDate
+
+                for (printer in printers) {
+                    if (mainPrinterDevices.containsKey(printer.id) && printer.isConnected) {
+                        mainPrinterDevices[printer.id]?.let { device ->
+                            val printerLocations = printerLocationDao.getPrinterLocationFromPrinter(printer.id)
+
+                            mainPrinterDevices[printer.id] = PrinterDevice(
+                                device.deviceConnection,
+                                device.printer,
+                                printer,
+                                printerLocations
+                            )
+                        }
+
+                        continue
+                    }
+
+                    if (printer.interfaceType == PrinterInterfaceType.Bluetooth.id) {
+                        val connectionResult = connectBluetoothPrinter(printer)
+                        if (connectionResult != null) {
+                            val printerLocations = printerLocationDao.getPrinterLocationFromPrinter(printer.id)
+                            val printerDevice = PrinterDevice(
+                                connectionResult.first,
+                                connectionResult.second,
+                                printer,
+                                printerLocations
+                            )
+
+                            mainPrinterDevices[printer.id] = printerDevice
+                            printerDao.update(printer.apply {
+                                isConnected = true
+                                updatedAt = updatedLastObservedDate
+                            }, false)
+                        } else {
+                            printerDao.update(printer.apply {
+                                isConnected = false
+                                updatedAt = updatedLastObservedDate
+                            }, false)
+                        }
+                    }
+
+                    // TODO: other interfaces haven't implemented yet
+                }
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getBluetoothDeviceList(onListUpdated: (List<PrinterConnection>) -> Unit) = scope.launch {
+        val bluetoothConnections = MyBluetoothPrintersConnections()
+        while (true) {
+            val bluetoothList = bluetoothConnections.list
+            onListUpdated(bluetoothList.toList().map {
+                PrinterConnection(it, it.device.address, it.device.name)
+            })
+            delay(10000)
+        }
+    }
+
+    fun scanBluetoothDevices() = callbackFlow {
+        val job = getBluetoothDeviceList {
+            trySend(it)
+        }
+
+        awaitClose {
+            job.cancel()
+        }
+    }
+
+    private fun connectBluetoothPrinter(printer: PrinterEntity): Pair<DeviceConnection, EscPosPrinterCommands>? {
+        return bluetoothAdapter?.let {
+            try {
+                val deviceConnection = BluetoothConnection(it.getRemoteDevice(printer.address))
+                deviceConnection to EscPosPrinterCommands(deviceConnection).connect()
+            } catch (e: Throwable) {
+                Timber.e(e, "Error connecting printer $printer")
+                null
+            }
+        }
+    }
+
+    fun reconnectBluetoothPrinter(printerId: String) {
+        scope.launch {
+            val printer = printerDao.getPrinter(printerId) ?: return@launch
+
+            connectBluetoothPrinter(printer)?.let {
+                val printerLocations = printerLocationDao.getPrinterLocationFromPrinter(printer.id)
+                val printerDevice = PrinterDevice(
+                    it.first,
+                    it.second,
+                    printer,
+                    printerLocations
+                )
+
+                mainPrinterDevices[printer.id] = printerDevice
+                printerDao.update(printer.apply {
+                    isConnected = true
+                })
+            } ?: run {
+                printerDao.update(printer.apply {
+                    isConnected = false
+                })
+                uiStatusEventBus.setUiStatus(UiStatus.ShowError(UiMessage.ResourceMessage(
+                    R.string.printer_connection_error
+                )))
+            }
+        }
+    }
+
+    fun addBluetoothPrinter(printer: PrinterConnection, name: String, paperWidth: PaperWidth, locations: List<String>) {
+        scope.launch {
+            val printerData = PrinterEntity(
+                UUID.randomUUID().toString(),
+                name.ifBlank { printer.name },
+                printer.address,
+                paperWidth.width,
+                false,
+                1,
+            )
+
+            printerDao.save(printerData)
+
+            for (locationId in locations) {
+                printerLocationDao.save(PrinterLocationEntity(
+                    UUID.randomUUID().toString(),
+                    printerData.id,
+                    locationId
+                ))
+            }
+        }
+    }
+
+    fun deletePrinter(id: String) {
+        scope.launch {
+            printerDao.deletePrinter(id)
+
+            mainPrinterDevices[id]?.printer?.disconnect()
+            mainPrinterDevices.remove(id)
+        }
+    }
+
+    fun printTestPage(printerId: String) {
+        scope.launch {
+            val printerDevice = mainPrinterDevices[printerId] ?: return@launch
+            val text = "[C]TEST PAGE\n" +
+                    "[L]Name: ${printerDevice.printerData.name}\n" +
+                    "[L]Address: ${printerDevice.printerData.address}\n"
+
+            printFormatted(text, printerId)
+        }
+    }
+
+    private fun printFormatted(text: String, printerId: String, feedMM: Float = 0f, openCashBox: Boolean = false): Boolean {
+        return try {
+            val printerDevice = mainPrinterDevices[printerId] ?: return false
+            val paperWidth = PaperWidth.fromWidth(printerDevice.printerData.paperWidth) ?: return false
+            val escPosPrinter = EscPosPrinter(
+                printerDevice.printer,
+                203,
+                paperWidth.width.toFloat(),
+                paperWidth.characters
+            )
+
+            escPosPrinter.printFormattedTextAndCut(text, feedMM)
+            if (openCashBox) {
+                printerDevice.printer.connect().openCashBox()
+            }
+
+            true
+        } catch (e: Throwable) {
+            Timber.e(e, "Printing failed!")
+            false
+        }
+    }
+}

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+        <variable
+            name="mainVM"
+            type="com.desapabandara.pos.ui.viewmodel.MainViewModel" />
+        <import type="com.desapabandara.pos.model.ui.MainMenu"/>
+    </data>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@color/white">
+
+        <FrameLayout
+            android:id="@+id/menu_header"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_alignEnd="@id/menu_logout"
+            android:background="@color/brown_15">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:scaleType="centerInside"
+                android:onClick="@{()-> mainVM.toggleMenuDrawer()}"
+                android:src="@drawable/ic_menu_toggle" />
+
+        </FrameLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_alignEnd="@id/menu_logout"
+            android:layout_below="@id/menu_header"
+            android:layout_above="@id/menu_logout">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:id="@+id/menu_pos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="60dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentEnd="true"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_menu_selection"
+                    isSelected="@{mainVM.activeMainMenu == MainMenu.POS}"
+                    android:onClick="@{() -> mainVM.selectMainMenu(MainMenu.POS)}">
+
+                    <ImageView
+                        android:id="@+id/ic_pos"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_menu_pos" />
+
+                    <TextView
+                        android:id="@+id/label_pos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:gravity="center_vertical"
+                        android:text="POS"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/menu_held_orders"
+                    android:layout_width="wrap_content"
+                    android:layout_height="60dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_below="@id/menu_pos"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_menu_selection"
+                    isSelected="@{mainVM.activeMainMenu == MainMenu.HeldOrder}"
+                    android:onClick="@{() -> mainVM.selectMainMenu(MainMenu.HeldOrder)}">
+
+                    <ImageView
+                        android:id="@+id/ic_held_orders"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_menu_held_orders" />
+
+                    <TextView
+                        android:id="@+id/label_held_orders"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:gravity="center_vertical"
+                        android:text="Held Orders"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/menu_order_history"
+                    android:layout_width="wrap_content"
+                    android:layout_height="60dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_below="@id/menu_held_orders"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_menu_selection"
+                    isSelected="@{mainVM.activeMainMenu == MainMenu.OrderHistory}"
+                    android:onClick="@{() -> mainVM.selectMainMenu(MainMenu.OrderHistory)}">
+
+                    <ImageView
+                        android:id="@+id/ic_order_history"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_menu_order_history" />
+
+                    <TextView
+                        android:id="@+id/label_order_history"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:gravity="center_vertical"
+                        android:text="Order History"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/menu_settings"
+                    android:layout_width="wrap_content"
+                    android:layout_height="60dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_below="@id/menu_order_history"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_menu_selection"
+                    isSelected="@{mainVM.activeMainMenu == MainMenu.Settings}"
+                    android:onClick="@{() -> mainVM.selectMainMenu(MainMenu.Settings)}">
+
+                    <ImageView
+                        android:id="@+id/ic_settings"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_menu_settings" />
+
+                    <TextView
+                        android:id="@+id/label_settings"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:gravity="center_vertical"
+                        android:text="Settings"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+            </RelativeLayout>
+        </ScrollView>
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="1dp"
+            android:background="@color/divider"
+            android:layout_alignTop="@id/menu_logout"
+            android:layout_alignEnd="@id/menu_logout"
+            android:id="@+id/logut_divider"/>
+
+        <LinearLayout
+            android:id="@+id/menu_logout"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:layout_alignParentBottom="true"
+            android:padding="8dp"
+            android:onClick="@{() -> mainVM.systemLogout()}">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_menu_logout" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:paddingEnd="8dp"
+                android:layout_marginEnd="38dp"
+                android:text="Log Out"
+                android:fontFamily="sans-serif-medium"/>
+        </LinearLayout>
+    </RelativeLayout>
+
+</layout>

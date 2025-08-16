@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="vm"
+            type="com.desapabandara.pos.ui.viewmodel.SetOrderTypeViewModel" />
+
+        <import type="com.desapabandara.pos.base.model.OrderType"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black_transparent"
+        android:onClick="@{() -> vm.dismiss()}">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/middle_guide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent=".5"/>
+
+        <View
+            android:id="@+id/bg_order_type"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tv_title"
+            app:layout_constraintBottom_toBottomOf="@id/btn_eat_in"
+            android:layout_marginTop="-16dp"
+            android:layout_marginBottom="-16dp"
+            android:layout_marginHorizontal="30dp"
+            android:background="@drawable/bg_white_rounded"/>
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_order_type"
+            app:layout_constraintBottom_toTopOf="@id/layout_table"
+            app:layout_constraintStart_toStartOf="@id/layout_table"
+            app:layout_constraintEnd_toEndOf="@id/layout_table"
+            android:layout_marginBottom="16dp"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layout_table"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/bg_order_type"
+            app:layout_constraintEnd_toEndOf="@id/bg_order_type"
+            app:layout_constraintTop_toTopOf="@id/middle_guide"
+            app:layout_constraintBottom_toBottomOf="@id/middle_guide"
+            android:layout_marginHorizontal="16dp"
+            android:hint="@string/table_number">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:text="@={vm.tableNumber}"
+                android:inputType="number"
+                android:gravity="center_horizontal"
+                android:imeOptions="actionDone"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+        <TextView
+            android:id="@+id/btn_eat_in"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:text="@string/order_type_eat_in"
+            app:layout_constraintStart_toStartOf="@id/layout_table"
+            app:layout_constraintTop_toBottomOf="@id/layout_table"
+            app:layout_constraintEnd_toStartOf="@id/btn_takeaway"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            isSelected="@{vm.orderType == OrderType.EatIn}"
+            android:background="@drawable/bg_order_type_selection"
+            android:onClick="@{() -> vm.selectType(OrderType.EatIn)}"/>
+
+        <TextView
+            android:id="@+id/btn_takeaway"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:text="@string/order_type_takeaway"
+            app:layout_constraintEnd_toEndOf="@id/layout_table"
+            app:layout_constraintTop_toTopOf="@id/btn_eat_in"
+            app:layout_constraintStart_toEndOf="@id/btn_eat_in"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            isSelected="@{vm.orderType == OrderType.Takeaway}"
+            android:background="@drawable/bg_order_type_selection"
+            android:onClick="@{() -> vm.selectType(OrderType.Takeaway)}"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>
