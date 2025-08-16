@@ -23,6 +23,7 @@
     <string name="total">Total</string>
     <string name="cart">Cart</string>
     <string name="order_number_display">No %1s</string>
+    <string name="order_number_label">No</string>
     <string name="order_type_eat_in">Eat In</string>
     <string name="order_type_takeaway">Takeaway</string>
     <string name="table_is_not_available">Table is not available</string>
@@ -45,4 +46,9 @@
     <string name="note">Note</string>
     <string name="quantity">Quantity</string>
     <string name="takeaway_badge">T</string>
+    <string name="invoice">Invoice</string>
+    <string name="staff">Staff</string>
+    <string name="customer">Customer</string>
+    <string name="timestamp">Timestamp</string>
+    <string name="order_details">Order Details</string>
 </resources>

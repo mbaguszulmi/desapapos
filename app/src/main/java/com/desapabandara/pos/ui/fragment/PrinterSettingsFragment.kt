@@ -38,6 +38,8 @@ class PrinterSettingsFragment : Fragment() {
             printerSettingsViewModel.connectPrinter(it)
         }, {
             printerSettingsViewModel.printTestPage(it)
+        }, {
+            printerSettingsViewModel.deletePrinter(it)
         })
     }
 

@@ -1,60 +1,65 @@
 package com.desapabandara.pos.ui.fragment
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.desapabandara.pos.R
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
+import co.mbznetwork.android.base.extension.observeOnLifecycle
+import com.desapabandara.pos.databinding.FragmentOrderHistoryBinding
+import com.desapabandara.pos.ui.adapter.OrderHistoryAdapter
+import com.desapabandara.pos.ui.viewmodel.MainViewModel
+import com.desapabandara.pos.ui.viewmodel.OrderHistoryViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [OrderHistoryFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+@AndroidEntryPoint
 class OrderHistoryFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    private lateinit var binding: FragmentOrderHistoryBinding
+    private val orderHistoryViewModel by viewModels<OrderHistoryViewModel>()
+    private val mainViewModel by activityViewModels<MainViewModel>()
+
+    private val orderHistoryAdapter by lazy(LazyThreadSafetyMode.NONE) {
+        OrderHistoryAdapter {
+            orderHistoryViewModel.showDetails(it)
         }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_order_history, container, false)
+    ): View {
+        binding = FragmentOrderHistoryBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment OrderHistoryFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            OrderHistoryFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initView()
+        observeOrders()
+    }
+
+    private fun observeOrders() {
+        observeOnLifecycle(Lifecycle.State.CREATED) {
+            orderHistoryViewModel.orders.collect {
+                orderHistoryAdapter.submitList(it)
             }
+        }
+    }
+
+    private fun initView() {
+        binding.apply {
+            lifecycleOwner = viewLifecycleOwner
+            mainTopBar.menuVM = mainViewModel
+
+            orderRv.apply {
+                layoutManager = LinearLayoutManager(requireContext())
+                adapter = orderHistoryAdapter
+            }
+        }
     }
 }

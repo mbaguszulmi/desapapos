@@ -11,63 +11,97 @@
         <import type="android.view.View"/>
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <co.mbznetwork.android.base.view.SwipeRevealLayout
+        android:id="@+id/swipe_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        app:dragFromEdge="right">
 
-        <TextView
-            android:id="@+id/text_name"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@{printer.name}"
-            tools:text="Name"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="32dp"
-            android:textSize="16sp"
-            android:textColor="@color/black_1a"/>
+            android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/text_address"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@{printer.address}"
-            tools:text="Address"
-            app:layout_constraintTop_toBottomOf="@id/text_name"
-            app:layout_constraintStart_toStartOf="@id/text_name"
-            android:layout_marginTop="4dp"/>
+            <ImageButton
+                android:id="@+id/btn_connect"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:background="@color/green_50"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_connect" />
 
-        <ImageView
-            android:id="@+id/btn_print_test_page"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_print"
-            android:scaleType="centerInside"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginEnd="16dp"
-            android:visibility="@{printer.isConnected ? View.VISIBLE : View.GONE}"/>
+            <ImageButton
+                android:id="@+id/btn_test_print"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:background="?attr/colorSecondary"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_print_white" />
 
-        <ImageView
-            android:id="@+id/btn_connect"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_connect"
-            android:scaleType="centerInside"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginEnd="16dp"
-            android:visibility="@{printer.isConnected ? View.GONE : View.VISIBLE}"/>
+            <ImageButton
+                android:id="@+id/btn_remove_item"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:background="@color/red_36"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_delete" />
 
-        <View
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/divider"
-            app:layout_constraintTop_toBottomOf="@id/text_address"
-            android:layout_marginTop="8dp"/>
+            android:layout_height="wrap_content"
+            android:background="@color/white">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/bg_circle_green"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/text_name"
+                android:visibility="@{printer.isConnected ? View.VISIBLE : View.GONE}"/>
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/bg_circle_red"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/text_name"
+                android:visibility="@{printer.isConnected ? View.GONE : View.VISIBLE}"/>
+
+            <TextView
+                android:id="@+id/text_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{printer.name}"
+                tools:text="Name"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="32dp"
+                android:textSize="16sp"
+                android:textColor="@color/black_1a"/>
+
+            <TextView
+                android:id="@+id/text_address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{printer.address}"
+                tools:text="Address"
+                app:layout_constraintTop_toBottomOf="@id/text_name"
+                app:layout_constraintStart_toStartOf="@id/text_name"
+                android:layout_marginTop="4dp"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider"
+                app:layout_constraintTop_toBottomOf="@id/text_address"
+                android:layout_marginTop="8dp"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </co.mbznetwork.android.base.view.SwipeRevealLayout>
 </layout>

@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity() {
                 when(it) {
                     MainMenu.POS -> PosFragment()
                     MainMenu.HeldOrder -> HeldOrderFragment()
-//                    MainMenu.OrderHistory -> OrderHistoryFragment()
+                    MainMenu.OrderHistory -> OrderHistoryFragment()
                     MainMenu.Settings -> SettingsFragment()
                     else -> null
                 }?.let { fragment ->

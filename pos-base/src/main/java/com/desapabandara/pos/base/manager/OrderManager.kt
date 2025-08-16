@@ -37,6 +37,7 @@ import com.desapabandara.pos.preference.datastore.OrderDataStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -76,117 +77,125 @@ class OrderManager @Inject constructor(
 
     fun start() {
         scope.launch {
-            orderDao.getActiveOrder().flatMapLatest { order ->
-                if (order != null) {
-                    combine(
-                        orderItemDao.getOrderItemsByOrderId(order.id),
-                        orderPaymentDao.getOrderPaymentsByOrderId(order.id),
-                        orderTableDao.getOrderTableByOrderId(order.id).map {
-                            if (it != null) {
-                                tableDao.getTable(it.tableId)?.let { table ->
-                                    return@map it.id to table
-                                }
-                            }
+            mapOrderData(orderDao.getActiveOrder()).flowOn(ioDispatcher).collect {
+                _currentOrder.value = mapOrderFlowToDisplay(it)
+            }
+        }
+    }
 
-                            null to null
+    private fun mapOrderData(orderData: Flow<OrderEntity?>) = orderData.flatMapLatest { order ->
+        if (order != null) {
+            combine(
+                orderItemDao.getOrderItemsByOrderId(order.id),
+                orderPaymentDao.getOrderPaymentsByOrderId(order.id),
+                orderTableDao.getOrderTableByOrderId(order.id).map {
+                    if (it != null) {
+                        tableDao.getTable(it.tableId)?.let { table ->
+                            return@map it.id to table
                         }
-                    ) { items, payments, (orderTableId, table) ->
-                        OrderFlowMap(order, items, payments, orderTableId?.let { otId ->
-                            table?.let { t ->
-                                OrderTable(otId, Table(
-                                        t.id,
-                                        t.name
-                                    )
-                                )
-                            }
-                        })
                     }
-                } else {
-                    flow<OrderFlowMap?> { emit(null) }
+
+                    null to null
                 }
-            }.flowOn(ioDispatcher).collect {
-                _currentOrder.value = it?.let {
-                    with(it.order) {
-                        Order(
+            ) { items, payments, (orderTableId, table) ->
+                OrderFlowMap(order, items, payments, orderTableId?.let { otId ->
+                    table?.let { t ->
+                        OrderTable(otId, Table(
+                            t.id,
+                            t.name
+                        )
+                        )
+                    }
+                })
+            }
+        } else {
+            flow<OrderFlowMap?> { emit(null) }
+        }
+    }
+
+    private suspend fun mapOrderFlowToDisplay(orderFlowMap: OrderFlowMap?) = orderFlowMap?.let {
+        with(it.order) {
+            Order(
+                id,
+                storeId,
+                invoiceNumber,
+                orderNumber,
+                adultMaleCount,
+                adultFemaleCount,
+                childMaleCount,
+                childFemaleCount,
+                adultMaleCount + adultFemaleCount + childMaleCount + childFemaleCount,
+                com.desapabandara.pos.base.model.OrderType.fromId(orderType) ?: com.desapabandara.pos.base.model.OrderType.EatIn,
+                subtotalExcludingTax,
+                subtotalTax,
+                subtotalExcludingTax + subtotalTax,
+                discountExcludingTax,
+                discountTax,
+                discountExcludingTax + discountTax,
+                surchargeExcludingTax,
+                surchargeTax,
+                surchargeExcludingTax + surchargeTax,
+                totalExcludingTax,
+                totalTax,
+                totalExcludingTax + totalTax,
+                totalCost,
+                com.desapabandara.pos.base.model.OrderStatus.fromId(orderStatus) ?: com.desapabandara.pos.base.model.OrderStatus.Active,
+                com.desapabandara.pos.base.model.PaymentStatus.fromId(paymentStatus) ?: com.desapabandara.pos.base.model.PaymentStatus.Open,
+                expectedTotalPreparingDuration,
+                createdBy,
+                customerName,
+                orderNote,
+                Date(createdAt),
+                deletedAt?.let { d -> Date(d) },
+                Date(updatedAt),
+                synced,
+                it.orderItems.map { item ->
+                    with(item) {
+                        OrderItem(
                             id,
-                            storeId,
-                            invoiceNumber,
-                            orderNumber,
-                            adultMaleCount,
-                            adultFemaleCount,
-                            childMaleCount,
-                            childFemaleCount,
-                            adultMaleCount + adultFemaleCount + childMaleCount + childFemaleCount,
-                            OrderType.fromId(orderType) ?: OrderType.EatIn,
-                            subtotalExcludingTax,
-                            subtotalTax,
-                            subtotalExcludingTax + subtotalTax,
-                            discountExcludingTax,
-                            discountTax,
-                            discountExcludingTax + discountTax,
-                            surchargeExcludingTax,
-                            surchargeTax,
-                            surchargeExcludingTax + surchargeTax,
-                            totalExcludingTax,
-                            totalTax,
-                            totalExcludingTax + totalTax,
-                            totalCost,
-                            OrderStatus.fromId(orderStatus) ?: OrderStatus.Active,
-                            PaymentStatus.fromId(paymentStatus) ?: PaymentStatus.Open,
-                            expectedTotalPreparingDuration,
-                            createdBy,
-                            customerName,
-                            orderNote,
+                            productId,
+                            name,
+                            quantity,
+                            isTakeaway,
+                            priceExcludingTax,
+                            tax,
+                            priceExcludingTax + tax,
+                            (priceExcludingTax + tax) * quantity,
+                            isTaxInclusive,
+                            cost,
+                            preparingDuration,
+                            com.desapabandara.pos.base.model.ItemStatus.fromId(status) ?: com.desapabandara.pos.base.model.ItemStatus.New,
+                            itemNote,
                             Date(createdAt),
                             deletedAt?.let { d -> Date(d) },
                             Date(updatedAt),
-                            synced,
-                            it.orderItems.map { item ->
-                                with(item) {
-                                    OrderItem(
-                                        id,
-                                        productId,
-                                        name,
-                                        quantity,
-                                        isTakeaway,
-                                        priceExcludingTax,
-                                        tax,
-                                        priceExcludingTax + tax,
-                                        (priceExcludingTax + tax) * quantity,
-                                        isTaxInclusive,
-                                        cost,
-                                        preparingDuration,
-                                        ItemStatus.fromId(status) ?: ItemStatus.New,
-                                        itemNote,
-                                        Date(createdAt),
-                                        deletedAt?.let { d -> Date(d) },
-                                        Date(updatedAt),
-                                    )
-                                }
-                            },
-                            it.orderPayments.map { payment ->
-                                with(payment) {
-                                    OrderPayment(
-                                        id,
-                                        paymentMethodId,
-                                        amount,
-                                        referenceNumber,
-                                        Date(createdAt),
-                                        deletedAt?.let { d -> Date(d) },
-                                        Date(updatedAt),
-                                    )
-                                }
-                            },
-                            it.orderTable,
-                            staffDao.getStaffByIdSingle(createdBy)?.run {
-                                OrderStaff(id, name)
-                            },
-                            null
                         )
                     }
-                }
-            }
+                },
+                it.orderPayments.map { payment ->
+                    with(payment) {
+                        OrderPayment(
+                            id,
+                            paymentMethodId,
+                            amount,
+                            referenceNumber,
+                            Date(createdAt),
+                            deletedAt?.let { d -> Date(d) },
+                            Date(updatedAt),
+                        )
+                    }
+                },
+                it.orderTable,
+                staffDao.getStaffByIdSingle(createdBy)?.run {
+                    OrderStaff(id, name)
+                },
+                null
+            )
         }
+    }
+
+    suspend fun getOrderDataDisplayFlow(id: String) = mapOrderData(orderDao.getOrder(id)).map {
+        mapOrderFlowToDisplay(it)
     }
 
     private suspend fun generateOrderNumberAndInvoice(): OrderNumberAndInvoice {
@@ -403,12 +412,15 @@ class OrderManager @Inject constructor(
         scope.launch {
             currentOrder.value?.let {
                 orderDao.getOrderById(it.id)?.apply {
+                    val updateTime = System.currentTimeMillis()
                     this.orderStatus = OrderStatus.Sent.id
-                    createdAt = System.currentTimeMillis()
+                    createdAt = updateTime
 
                     orderDao.update(this)
                     orderPrintEventBus.publishJob(OrderPrintJob(
-                        it,
+                        it.apply {
+                            this.createdAt = Date(updateTime)
+                        },
                     ))
                 }
             }
@@ -441,10 +453,13 @@ class OrderManager @Inject constructor(
         }
     }
 
+    private fun isOrderHasBeenSent() =
+        currentOrder.value?.orderItems?.any { it.status == ItemStatus.Sent } ?: false
+
     fun payOrder() {
         scope.launch {
             currentOrder.value?.let {
-                orderDao.getOrderById(it.id)?.apply {
+                orderDao.getOrderById(it.id)?.apply order@ {
                     val defaultPaymentMethod = paymentMethodDao.getFirstPaymentMethod()
 
                     orderPaymentDao.save(
@@ -460,11 +475,16 @@ class OrderManager @Inject constructor(
                     orderStatus = OrderStatus.Completed.id
                     paymentStatus = PaymentStatus.Settled.id
 
+                    if (!isOrderHasBeenSent()) {
+                        createdAt = System.currentTimeMillis()
+                    }
+
                     orderDao.update(this)
 
                     orderPrintEventBus.publishJob(OrderPrintJob(
                         it.apply {
                             orderStatus = OrderStatus.Completed
+                            this.createdAt = Date(this@order.createdAt)
                         }
                     ))
                 }

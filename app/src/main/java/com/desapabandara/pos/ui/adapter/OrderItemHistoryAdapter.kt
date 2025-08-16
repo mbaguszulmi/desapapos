@@ -3,36 +3,23 @@ package com.desapabandara.pos.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.desapabandara.pos.databinding.ItemOrderItemBinding
+import com.desapabandara.pos.databinding.ItemOrderItemHistoryBinding
 import com.desapabandara.pos.databinding.ItemOrderItemNoteBinding
 import com.desapabandara.pos.model.ui.OrderItemDisplay
 
-class OrderItemAdapter(
-    private val onItemDelete: (String) -> Unit,
-    private val onItemShowDetails: (String) -> Unit
-): ListAdapter<OrderItemDisplay, OrderItemAdapter.ViewHolder>(ITEM_DIFF) {
+class OrderItemHistoryAdapter: ListAdapter<OrderItemDisplay, OrderItemHistoryAdapter.ViewHolder>(ITEM_DIFF) {
     sealed class ViewHolder(root: View): RecyclerView.ViewHolder(root) {
         abstract fun bind(item: OrderItemDisplay)
     }
 
     inner class ItemHolder(
-        private val binding: ItemOrderItemBinding
+        private val binding: ItemOrderItemHistoryBinding
     ): ViewHolder(binding.root) {
         override fun bind(item: OrderItemDisplay) {
             binding.apply {
                 orderItem = item as OrderItemDisplay.Item
-                btnRemoveItem.setOnClickListener {
-                    onItemDelete(item.id)
-                    swipeView.close(true, false)
-                }
-
-                btnOrderDetails.setOnClickListener {
-                    onItemShowDetails(item.id)
-                    swipeView.close(true, false)
-                }
 
                 executePendingBindings()
             }
@@ -54,7 +41,7 @@ class OrderItemAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return when (viewType) {
-            TYPE_ITEM -> ItemHolder(ItemOrderItemBinding.inflate(
+            TYPE_ITEM -> ItemHolder(ItemOrderItemHistoryBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
                 false
@@ -77,18 +64,4 @@ class OrderItemAdapter(
             else -> TYPE_NOTE
         }
     }
-}
-
-val TYPE_ITEM = 1
-val TYPE_NOTE = 2
-
-val ITEM_DIFF = object : DiffUtil.ItemCallback<OrderItemDisplay>(){
-    override fun areItemsTheSame(oldItem: OrderItemDisplay, newItem: OrderItemDisplay): Boolean {
-        return oldItem.id == newItem.id
-    }
-
-    override fun areContentsTheSame(oldItem: OrderItemDisplay, newItem: OrderItemDisplay): Boolean {
-        return oldItem == newItem
-    }
-
 }

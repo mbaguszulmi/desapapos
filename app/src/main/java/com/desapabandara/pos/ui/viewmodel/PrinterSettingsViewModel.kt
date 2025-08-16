@@ -94,6 +94,10 @@ class PrinterSettingsViewModel @Inject constructor(
         printerManager.reconnectBluetoothPrinter(id)
     }
 
+    fun deletePrinter(id: String) {
+        printerManager.deletePrinter(id)
+    }
+
     fun dismiss() {
         fragmentStateEventBus.currentStateFinished()
     }

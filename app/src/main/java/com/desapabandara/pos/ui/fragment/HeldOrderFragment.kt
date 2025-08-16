@@ -26,9 +26,11 @@ class HeldOrderFragment : Fragment() {
     private val mainViewModel by activityViewModels<MainViewModel>()
 
     private val orderAdapter by lazy(LazyThreadSafetyMode.NONE) {
-        HeldOrderAdapter {
+        HeldOrderAdapter({
             heldOrderViewModel.loadOrder(it)
-        }
+        }, {
+            heldOrderViewModel.showOrderDetail(it)
+        })
     }
 
     override fun onCreateView(

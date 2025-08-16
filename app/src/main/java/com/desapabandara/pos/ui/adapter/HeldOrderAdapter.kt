@@ -9,8 +9,9 @@ import com.desapabandara.pos.databinding.ItemHeldOrderBinding
 import com.desapabandara.pos.model.ui.HeldOrderDisplay
 
 class HeldOrderAdapter(
-    private val onLoadOrderClick: (String) -> Unit
-): ListAdapter<HeldOrderDisplay, HeldOrderAdapter.HeldOrderViewHolder>(HELD_ORDER_DIFF) {
+    private val onLoadOrderClick: (String) -> Unit,
+    private val onShowDetail: (String) -> Unit
+): ListAdapter<HeldOrderDisplay, HeldOrderAdapter.HeldOrderViewHolder>(ORDER_DISPLAY_DIFF) {
     inner class HeldOrderViewHolder(
         private val binding: ItemHeldOrderBinding
     ): ViewHolder(binding.root) {
@@ -19,6 +20,10 @@ class HeldOrderAdapter(
                 order = item
                 btnLoadOrder.setOnClickListener {
                     onLoadOrderClick(item.id)
+                }
+
+                root.setOnClickListener {
+                    onShowDetail(item.id)
                 }
 
                 executePendingBindings()
@@ -39,7 +44,7 @@ class HeldOrderAdapter(
     }
 }
 
-private val HELD_ORDER_DIFF = object : DiffUtil.ItemCallback<HeldOrderDisplay>() {
+val ORDER_DISPLAY_DIFF = object : DiffUtil.ItemCallback<HeldOrderDisplay>() {
     override fun areItemsTheSame(oldItem: HeldOrderDisplay, newItem: HeldOrderDisplay): Boolean {
         return oldItem.id == newItem.id
     }

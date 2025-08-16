@@ -13,9 +13,15 @@ abstract class OrderDao: BaseDao<OrderEntity>("OrderEntity") {
     @Query("SELECT * FROM OrderEntity WHERE id = :id")
     abstract suspend fun getOrderById(id: String): OrderEntity?
 
+    @Query("SELECT * FROM OrderEntity WHERE id = :id")
+    abstract fun getOrder(id: String): Flow<OrderEntity?>
+
     @Query("DELETE FROM OrderEntity WHERE id = :id")
     abstract suspend fun deleteOrder(id: String)
 
     @Query("SELECT * FROM OrderEntity WHERE orderStatus = 2 ORDER BY createdAt DESC")
     abstract fun getHeldOrders(): Flow<List<OrderEntity>>
+
+    @Query("SELECT * FROM OrderEntity WHERE orderStatus = 5 ORDER BY createdAt DESC")
+    abstract fun getCompletedOrders(): Flow<List<OrderEntity>>
 }

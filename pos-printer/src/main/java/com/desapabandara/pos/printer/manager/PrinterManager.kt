@@ -35,6 +35,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -72,12 +73,16 @@ class PrinterManager @Inject constructor(
         scope.launch {
             orderPrintEventBus.printJob.collect {
                 val posCounterLocation = locationDao.getLocation("1") ?: return@collect
-                val locationsListed = (listOf(posCounterLocation) + it.order.orderItems.mapNotNull { item ->
-                    productDao.getProductById(item.productId)?.locationId?.let { locationId ->
-                        locationDao.getLocation(locationId)
+                val locationsListed = if (it.receiptOnly) {
+                    listOf(posCounterLocation)
+                } else {
+                    (listOf(posCounterLocation) + it.order.orderItems.mapNotNull { item ->
+                        productDao.getProductById(item.productId)?.locationId?.let { locationId ->
+                            locationDao.getLocation(locationId)
+                        }
+                    }).distinctBy { location ->
+                        location.id
                     }
-                }).distinctBy { location ->
-                    location.id
                 }
 
                 val printTasks = locationsListed.flatMap { location ->
@@ -182,9 +187,9 @@ class PrinterManager @Inject constructor(
             while(true) {
                 val lastObservedDate = lastPrinterObservedDate
                 val printers = if (lastObservedDate == null) {
-                    printerDao.getAll().first()
+                    printerDao.getAll().filterNot { it.isEmpty() }.first()
                 } else {
-                    printerDao.getPrinterAfterDate(lastObservedDate).first()
+                    printerDao.getPrinterAfterDate(lastObservedDate).filterNot { it.isEmpty() }.first()
                 }
 
                 val updatedLastObservedDate = System.currentTimeMillis()
@@ -273,6 +278,11 @@ class PrinterManager @Inject constructor(
     fun reconnectBluetoothPrinter(printerId: String) {
         scope.launch {
             val printer = printerDao.getPrinter(printerId) ?: return@launch
+
+            if (printer.isConnected) {
+                mainPrinterDevices[printer.id]?.printer?.disconnect()
+                return@launch
+            }
 
             connectBluetoothPrinter(printer)?.let {
                 val printerLocations = printerLocationDao.getPrinterLocationFromPrinter(printer.id)
