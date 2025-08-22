@@ -36,7 +36,23 @@
             android:imeOptions="actionDone"
             android:background="@color/white"
             android:paddingHorizontal="8dp"
-            android:maxLines="1"/>
+            android:maxLines="1"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/btn_cancel"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/bg_red_rounded"
+            android:text="@string/cancel"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:fontFamily="sans-serif-medium"
+            app:layout_constraintTop_toTopOf="@id/et_search"
+            app:layout_constraintBottom_toBottomOf="@id/et_search"
+            app:layout_constraintStart_toEndOf="@id/et_search"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp"/>
 
         <androidx.cardview.widget.CardView
             android:id="@+id/bg_rv"
