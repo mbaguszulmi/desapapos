@@ -36,6 +36,21 @@
             android:elevation="4dp"/>
 
         <TextView
+            android:id="@+id/btn_search_product"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="@string/search_product"
+            app:layout_constraintTop_toTopOf="@id/order_info_bg"
+            app:layout_constraintBottom_toBottomOf="@id/order_info_bg"
+            app:layout_constraintStart_toEndOf="@id/btn_add_customer"
+            app:layout_constraintEnd_toStartOf="@id/btn_order_type"
+            android:elevation="4dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp"
+            android:textColor="@color/grey_c7"
+            android:onClick="@{() -> posVM.searchProduct()}"/>
+
+        <TextView
             android:id="@+id/order_number_bg"
             android:layout_width="48dp"
             android:layout_height="48dp"

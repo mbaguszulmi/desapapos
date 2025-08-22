@@ -33,5 +33,5 @@ data class OrderEntity(
     override var createdAt: Long = System.currentTimeMillis(),
     override var deletedAt: Long? = null,
     override var updatedAt: Long = System.currentTimeMillis(),
-    val synced: Boolean = false
+    var synced: Boolean = false
 ): BaseEntity()

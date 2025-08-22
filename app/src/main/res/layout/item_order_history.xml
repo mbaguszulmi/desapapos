@@ -7,6 +7,8 @@
         <variable
             name="order"
             type="com.desapabandara.pos.model.ui.HeldOrderDisplay" />
+
+        <import type="android.view.View"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -106,14 +108,15 @@
 <!--            app:layout_constraintBottom_toBottomOf="parent"-->
 <!--            android:background="@drawable/bg_primary_rounded"/>-->
 
-<!--        <ImageView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:src="@drawable/ic_load"-->
-<!--            app:layout_constraintTop_toTopOf="@id/btn_load_order"-->
-<!--            app:layout_constraintBottom_toBottomOf="@id/btn_load_order"-->
-<!--            app:layout_constraintStart_toStartOf="@id/btn_load_order"-->
-<!--            app:layout_constraintEnd_toEndOf="@id/btn_load_order"/>-->
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_cloud_sync"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@id/col_3"
+            android:visibility="@{order.synced ? View.GONE : View.VISIBLE}"/>
 
         <View
             android:layout_width="match_parent"

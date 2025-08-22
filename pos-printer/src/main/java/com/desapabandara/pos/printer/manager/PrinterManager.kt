@@ -10,7 +10,6 @@ import com.dantsu.escposprinter.EscPosPrinter
 import com.dantsu.escposprinter.EscPosPrinterCommands
 import com.dantsu.escposprinter.connection.DeviceConnection
 import com.dantsu.escposprinter.connection.bluetooth.BluetoothConnection
-import com.dantsu.escposprinter.connection.bluetooth.BluetoothPrintersConnections
 import com.desapabandara.pos.base.eventbus.OrderPrintEventBus
 import com.desapabandara.pos.base.manager.OrderManager
 import com.desapabandara.pos.base.model.ItemStatus
@@ -32,6 +31,7 @@ import com.desapabandara.pos.printer.util.OrderPrintParser
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
@@ -46,7 +46,7 @@ import javax.inject.Singleton
 
 @Singleton
 class PrinterManager @Inject constructor(
-    @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val bluetoothAdapter: BluetoothAdapter?,
     private val printerDao: PrinterDao,
     private val printerLocationDao: PrinterLocationDao,
@@ -58,19 +58,20 @@ class PrinterManager @Inject constructor(
     private val orderManager: OrderManager,
     private val uiStatusEventBus: UIStatusEventBus
 ) {
-    private val scope = CoroutineScope(ioDispatcher + SupervisorJob())
+    private var scope: CoroutineScope? = null
     private val mainPrinterDevices = mutableMapOf<String, PrinterDevice>()
 
     private var lastPrinterObservedDate: Long? = null
 
-    fun initiateConnections() {
+    fun start() {
+        scope = CoroutineScope(ioDispatcher + SupervisorJob())
         observeSavedDevices()
         observePrinterConnectionStatus()
         observePrintJob()
     }
 
     private fun observePrintJob() {
-        scope.launch {
+        scope?.launch {
             orderPrintEventBus.printJob.collect {
                 val posCounterLocation = locationDao.getLocation("1") ?: return@collect
                 val locationsListed = if (it.receiptOnly) {
@@ -159,7 +160,7 @@ class PrinterManager @Inject constructor(
 
     @SuppressLint("MissingPermission")
     private fun observePrinterConnectionStatus() {
-        scope.launch {
+        scope?.launch {
             while (true) {
                 mainPrinterDevices.values.forEach {
                     val isDeviceConnected = it.deviceConnection.let { conn ->
@@ -183,7 +184,7 @@ class PrinterManager @Inject constructor(
     }
 
     private fun observeSavedDevices() {
-        scope.launch {
+        scope?.launch {
             while(true) {
                 val lastObservedDate = lastPrinterObservedDate
                 val printers = if (lastObservedDate == null) {
@@ -242,7 +243,7 @@ class PrinterManager @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
-    private fun getBluetoothDeviceList(onListUpdated: (List<PrinterConnection>) -> Unit) = scope.launch {
+    private fun getBluetoothDeviceList(onListUpdated: (List<PrinterConnection>) -> Unit) = scope?.launch {
         val bluetoothConnections = MyBluetoothPrintersConnections()
         while (true) {
             val bluetoothList = bluetoothConnections.list
@@ -259,7 +260,7 @@ class PrinterManager @Inject constructor(
         }
 
         awaitClose {
-            job.cancel()
+            job?.cancel()
         }
     }
 
@@ -276,7 +277,7 @@ class PrinterManager @Inject constructor(
     }
 
     fun reconnectBluetoothPrinter(printerId: String) {
-        scope.launch {
+        scope?.launch {
             val printer = printerDao.getPrinter(printerId) ?: return@launch
 
             if (printer.isConnected) {
@@ -309,7 +310,7 @@ class PrinterManager @Inject constructor(
     }
 
     fun addBluetoothPrinter(printer: PrinterConnection, name: String, paperWidth: PaperWidth, locations: List<String>) {
-        scope.launch {
+        scope?.launch {
             val printerData = PrinterEntity(
                 UUID.randomUUID().toString(),
                 name.ifBlank { printer.name },
@@ -332,7 +333,7 @@ class PrinterManager @Inject constructor(
     }
 
     fun deletePrinter(id: String) {
-        scope.launch {
+        scope?.launch {
             printerDao.deletePrinter(id)
 
             mainPrinterDevices[id]?.printer?.disconnect()
@@ -341,7 +342,7 @@ class PrinterManager @Inject constructor(
     }
 
     fun printTestPage(printerId: String) {
-        scope.launch {
+        scope?.launch {
             val printerDevice = mainPrinterDevices[printerId] ?: return@launch
             val text = "[C]TEST PAGE\n" +
                     "[L]Name: ${printerDevice.printerData.name}\n" +
@@ -372,5 +373,12 @@ class PrinterManager @Inject constructor(
             Timber.e(e, "Printing failed!")
             false
         }
+    }
+
+    fun stop() {
+        scope?.cancel()
+        scope = null
+        lastPrinterObservedDate = null
+        mainPrinterDevices.clear()
     }
 }

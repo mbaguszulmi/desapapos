@@ -1,9 +1,12 @@
 package co.mbznetwork.android.base.di
 
+import android.content.Context
+import android.net.ConnectivityManager
 import co.mbznetwork.android.base.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -49,4 +52,8 @@ object NetworkModule {
             .connectTimeout(BuildConfig.HTTP_CONNECTION_TIMEOUT.toLong(), TimeUnit.SECONDS)
             .writeTimeout(BuildConfig.HTTP_WRITE_TIMEOUT.toLong(), TimeUnit.SECONDS)
     }
+
+    @Provides
+    @Singleton
+    fun provideConnectivityManager(@ApplicationContext context: Context) = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 }

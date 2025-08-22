@@ -8,5 +8,6 @@ data class HeldOrderDisplay(
     val orderDate: String,
     val orderType: OrderType,
     val orderTable: String,
-    val total: String
+    val total: String,
+    val synced: Boolean
 )

@@ -23,4 +23,6 @@ class ProductRepository @Inject constructor(
     suspend fun saveProductCategories(productCategories: List<ProductCategoryEntity>) {
         productCategoryDao.insertMany(productCategories)
     }
+
+    fun getProductsByKeyword(keyword: String) = productDao.getProductByKeyword(keyword)
 }

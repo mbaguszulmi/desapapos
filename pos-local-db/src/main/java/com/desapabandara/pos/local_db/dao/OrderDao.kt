@@ -24,4 +24,10 @@ abstract class OrderDao: BaseDao<OrderEntity>("OrderEntity") {
 
     @Query("SELECT * FROM OrderEntity WHERE orderStatus = 5 ORDER BY createdAt DESC")
     abstract fun getCompletedOrders(): Flow<List<OrderEntity>>
+
+    @Query("SELECT * FROM OrderEntity WHERE orderStatus = 5 AND synced = 0 ORDER BY createdAt ASC")
+    abstract fun getUnSyncedOrder(): Flow<List<OrderEntity>>
+
+    @Query("SELECT * FROM OrderEntity WHERE orderStatus = 5 AND (synced = 0 OR updatedAt > :updatedAt) ORDER BY createdAt ASC")
+    abstract fun getUnSyncedOrder(updatedAt: Long): Flow<List<OrderEntity>>
 }

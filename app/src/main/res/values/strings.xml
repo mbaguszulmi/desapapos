@@ -51,4 +51,6 @@
     <string name="customer">Customer</string>
     <string name="timestamp">Timestamp</string>
     <string name="order_details">Order Details</string>
+    <string name="search_product">Search Product</string>
+    <string name="item_quantity_error">Quantity must be greater than 0</string>
 </resources>

@@ -59,7 +59,8 @@ class HeldOrderViewModel @Inject constructor(
                             DateUtil.formatDateTimeShort(Date(createdAt)),
                             OrderType.fromId(orderType) ?: OrderType.EatIn,
                             table?.name ?: "",
-                            currencyUtil.getCurrentFormat(totalExcludingTax + totalTax)
+                            currencyUtil.getCurrentFormat(totalExcludingTax + totalTax),
+                            synced
                         )
                     }
                 }

@@ -1,6 +1,7 @@
 package com.desapabandara.pos.base.repository
 
 import com.desapabandara.pos_backend.api.DesapaApi
+import com.desapabandara.pos_backend.model.request.OrderRequest
 import com.desapabandara.pos_backend.model.request.PosLoginRequest
 import com.desapabandara.pos_backend.model.response.BaseResponse
 import com.desapabandara.pos_backend.model.response.LoginResponse
@@ -46,5 +47,9 @@ class OnlineRepository @Inject constructor(
 
     suspend fun getTables() = requestOnlineData {
         desapaApi.getTables()
+    }
+
+    suspend fun syncOrder(order: OrderRequest) = requestOnlineData {
+        desapaApi.syncOrder(order)
     }
 }

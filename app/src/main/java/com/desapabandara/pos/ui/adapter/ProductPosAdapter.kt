@@ -37,7 +37,7 @@ class ProductPosAdapter(private val onItemClick: (String) -> Unit): ListAdapter<
     }
 }
 
-private val PRODUCT_DIFF = object: DiffUtil.ItemCallback<PosProductDisplay>() {
+val PRODUCT_DIFF = object: DiffUtil.ItemCallback<PosProductDisplay>() {
     override fun areItemsTheSame(oldItem: PosProductDisplay, newItem: PosProductDisplay): Boolean {
         return oldItem.id == newItem.id
     }

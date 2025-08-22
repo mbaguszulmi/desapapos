@@ -5,6 +5,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.databinding.BindingAdapter
 import androidx.databinding.InverseBindingAdapter
+import co.mbznetwork.android.base.extension.toEditable
 import com.desapabandara.pos.R
 import com.desapabandara.pos.base.model.OrderType
 import com.desapabandara.pos.model.ui.SyncStatus
@@ -41,6 +42,7 @@ fun setOrderTypeText(textView: TextView, orderType: OrderType) {
 @BindingAdapter("android:text")
 fun setText(view: EditText, value: Int) {
     view.setText(value.toString())
+    view.setSelection(value.toString().length)
 }
 
 @InverseBindingAdapter(attribute = "android:text", event = "android:textAttrChanged")

@@ -36,7 +36,9 @@ import com.desapabandara.pos.preference.datastore.AuthDataStore
 import com.desapabandara.pos.preference.datastore.OrderDataStore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -70,19 +72,23 @@ class OrderManager @Inject constructor(
     private val orderPrintEventBus: OrderPrintEventBus,
     @DeviceID private val deviceId: String
 ) {
-    private val scope = CoroutineScope(ioDispatcher + SupervisorJob())
+    private var scope: CoroutineScope? = null
 
     private val _currentOrder = MutableStateFlow<Order?>(null)
     val currentOrder = _currentOrder.asStateFlow()
 
     fun start() {
-        scope.launch {
-            mapOrderData(orderDao.getActiveOrder()).flowOn(ioDispatcher).collect {
-                _currentOrder.value = mapOrderFlowToDisplay(it)
+        scope?.cancel()
+        scope = CoroutineScope(ioDispatcher + SupervisorJob()).also {
+            it.launch {
+                mapOrderData(orderDao.getActiveOrder()).flowOn(ioDispatcher).collect {
+                    _currentOrder.value = mapOrderFlowToDisplay(it)
+                }
             }
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun mapOrderData(orderData: Flow<OrderEntity?>) = orderData.flatMapLatest { order ->
         if (order != null) {
             combine(
@@ -125,7 +131,7 @@ class OrderManager @Inject constructor(
                 childMaleCount,
                 childFemaleCount,
                 adultMaleCount + adultFemaleCount + childMaleCount + childFemaleCount,
-                com.desapabandara.pos.base.model.OrderType.fromId(orderType) ?: com.desapabandara.pos.base.model.OrderType.EatIn,
+                OrderType.fromId(orderType) ?: OrderType.EatIn,
                 subtotalExcludingTax,
                 subtotalTax,
                 subtotalExcludingTax + subtotalTax,
@@ -139,8 +145,8 @@ class OrderManager @Inject constructor(
                 totalTax,
                 totalExcludingTax + totalTax,
                 totalCost,
-                com.desapabandara.pos.base.model.OrderStatus.fromId(orderStatus) ?: com.desapabandara.pos.base.model.OrderStatus.Active,
-                com.desapabandara.pos.base.model.PaymentStatus.fromId(paymentStatus) ?: com.desapabandara.pos.base.model.PaymentStatus.Open,
+                OrderStatus.fromId(orderStatus) ?: OrderStatus.Active,
+                PaymentStatus.fromId(paymentStatus) ?: PaymentStatus.Open,
                 expectedTotalPreparingDuration,
                 createdBy,
                 customerName,
@@ -200,8 +206,13 @@ class OrderManager @Inject constructor(
 
     private suspend fun generateOrderNumberAndInvoice(): OrderNumberAndInvoice {
         val currentDate = DateUtil.format(Date(), "yyyyMMdd")
-        val lastOrderNumber = orderDataStore.getLastOrderNumber().first()
         val lastOrderDate = orderDataStore.getOrderStartDate().first()
+        val lastOrderNumber = if (currentDate == lastOrderDate) {
+            orderDataStore.getLastOrderNumber().first()
+        } else {
+            0
+        }
+
         val currentStore = authDataStore.getCurrentStoreData().first()
         val currentStoreId = currentStore?.id ?: "0"
 
@@ -296,7 +307,7 @@ class OrderManager @Inject constructor(
     }
 
     fun addOrderItem(productId: String) {
-        scope.launch {
+        scope?.launch {
             val orderId = currentOrder.value?.id ?: createEmptyOrder()
 
             val product = productDao.getProductById(productId)
@@ -347,7 +358,7 @@ class OrderManager @Inject constructor(
     }
 
     fun removeOrderItem(itemId: String) {
-        scope.launch {
+        scope?.launch {
             val orderItem = orderItemDao.getOrderItemById(itemId) ?: return@launch
 
             orderItemDao.delete(orderItem)
@@ -357,7 +368,7 @@ class OrderManager @Inject constructor(
     }
 
     fun clearCurrentOrder() {
-        scope.launch {
+        scope?.launch {
             currentOrder.value?.let {
                 orderItemDao.deleteItemsInOrder(it.id)
                 orderTableDao.deleteTableFromOrder(it.id)
@@ -375,7 +386,7 @@ class OrderManager @Inject constructor(
     }
 
     fun setTable(tableId: String) {
-        scope.launch {
+        scope?.launch {
             currentOrder.value?.let {
                 if (tableId.isNotBlank()) {
                     val orderTable = orderTableDao.getOrderTableByOrder(it.id)?.apply {
@@ -397,7 +408,7 @@ class OrderManager @Inject constructor(
     }
 
     fun setOrderType(type: OrderType) {
-        scope.launch {
+        scope?.launch {
             currentOrder.value?.let {
                 orderDao.getOrderById(it.id)?.apply {
                     this.orderType = type.id
@@ -409,7 +420,7 @@ class OrderManager @Inject constructor(
     }
 
     fun sendOrder() {
-        scope.launch {
+        scope?.launch {
             currentOrder.value?.let {
                 orderDao.getOrderById(it.id)?.apply {
                     val updateTime = System.currentTimeMillis()
@@ -428,7 +439,7 @@ class OrderManager @Inject constructor(
     }
 
     fun activateOrder(id: String) {
-        scope.launch {
+        scope?.launch {
             val currentActiveOrder = currentOrder.value
             if (currentActiveOrder != null) {
                 uiStatusEventBus.setUiStatus(UiStatus.ShowError(
@@ -457,7 +468,7 @@ class OrderManager @Inject constructor(
         currentOrder.value?.orderItems?.any { it.status == ItemStatus.Sent } ?: false
 
     fun payOrder() {
-        scope.launch {
+        scope?.launch {
             currentOrder.value?.let {
                 orderDao.getOrderById(it.id)?.apply order@ {
                     val defaultPaymentMethod = paymentMethodDao.getFirstPaymentMethod()
@@ -493,7 +504,7 @@ class OrderManager @Inject constructor(
     }
 
     fun markItemsSentAndPrinted(id: String, itemIds: List<String>) {
-        scope.launch {
+        scope?.launch {
             val items = if (itemIds.isEmpty()) orderItemDao.getOrderItemsByOrder(id) else orderItemDao.getOrderItems(itemIds)
             items.forEach {
                 orderItemDao.update(it.apply {
@@ -512,7 +523,7 @@ class OrderManager @Inject constructor(
         childMaleCount: Int,
         childFemaleCount: Int
     ) {
-        scope.launch {
+        scope?.launch {
             currentOrder.value?.let {
                 val order = orderDao.getOrderById(it.id) ?: return@let
 
@@ -528,7 +539,7 @@ class OrderManager @Inject constructor(
     }
 
     fun addItemInfo(info: ItemInfo) {
-        scope.launch {
+        scope?.launch {
             val orderItem = orderItemDao.getOrderItemById(info.id) ?: return@launch
 
             orderItemDao.update(orderItem.apply {
@@ -539,6 +550,11 @@ class OrderManager @Inject constructor(
 
             calculateOrder(orderItem.orderId)
         }
+    }
+
+    fun stop() {
+        scope?.cancel()
+        scope = null
     }
 
 }

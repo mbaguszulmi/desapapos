@@ -9,4 +9,7 @@ import kotlinx.coroutines.flow.Flow
 abstract class OrderPaymentDao: BaseDao<OrderPaymentEntity>("OrderPaymentEntity") {
     @Query("SELECT * FROM OrderPaymentEntity WHERE orderId = :orderId")
     abstract fun getOrderPaymentsByOrderId(orderId: String): Flow<List<OrderPaymentEntity>>
+
+    @Query("SELECT * FROM OrderPaymentEntity WHERE orderId = :id")
+    abstract suspend fun getOrderPaymentsByOrder(id: String): List<OrderPaymentEntity>
 }

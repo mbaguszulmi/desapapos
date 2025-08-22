@@ -5,6 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.mbznetwork.android.base.di.IoDispatcher
 import co.mbznetwork.android.base.eventbus.FragmentStateEventBus
+import co.mbznetwork.android.base.eventbus.UIStatusEventBus
+import co.mbznetwork.android.base.model.UiMessage
+import co.mbznetwork.android.base.model.UiStatus
+import com.desapabandara.pos.R
 import com.desapabandara.pos.base.model.ItemInfo
 import com.desapabandara.pos.local_db.dao.OrderItemDao
 import com.desapabandara.pos.model.ui.ItemDetailsResult
@@ -21,6 +25,7 @@ class ItemDetailsViewModel @Inject constructor(
     private val fragmentStateEventBus: FragmentStateEventBus,
     private val savedStateHandle: SavedStateHandle,
     private val orderItemDao: OrderItemDao,
+    private val uiStatusEventBus: UIStatusEventBus,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): ViewModel() {
     private val id = MutableStateFlow("")
@@ -78,6 +83,13 @@ class ItemDetailsViewModel @Inject constructor(
 
     fun save() {
         viewModelScope.launch(ioDispatcher) {
+            if (quantity.value <= 0) {
+                uiStatusEventBus.setUiStatus(UiStatus.ShowError(UiMessage.ResourceMessage(
+                        R.string.item_quantity_error
+                    )))
+                return@launch
+            }
+
             fragmentStateEventBus.currentStateFinished(ItemDetailsResult.Saved(
                 ItemInfo(
                     id.value,

@@ -15,6 +15,7 @@ import com.desapabandara.pos.model.ui.CustomerSetResult
 import com.desapabandara.pos.model.ui.PrinterDeviceScanResult
 import com.desapabandara.pos.model.ui.SetOrderTypeResult
 import com.desapabandara.pos.ui.fragment.AddCustomerFragment
+import com.desapabandara.pos.ui.fragment.ProductSearchFragment
 import com.desapabandara.pos.ui.fragment.SetOrderTypeFragment
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -132,5 +133,9 @@ class PosViewModel @Inject constructor(
         if (result is CustomerSetResult.Added) {
             orderManager.addCustomer(result.id, result.name, result.phoneNumber, result.adultMaleCount, result.adultFemaleCount, result.childMaleCount, result.childFemaleCount)
         }
+    }
+
+    fun searchProduct() {
+        fragmentStateEventBus.setCurrentState(ProductSearchFragment())
     }
 }

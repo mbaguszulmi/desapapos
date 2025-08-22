@@ -24,6 +24,7 @@
     <color name="green_50">#4CAF50</color>
 
     <color name="grey_e4">#E4E4E4</color>
+    <color name="grey_c7">#C7C7C7</color>
 
     <color name="divider">#DBDBDB</color>
     <color name="mainFont">@color/black_1a</color>

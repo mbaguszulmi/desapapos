@@ -1,5 +1,6 @@
 package com.desapabandara.pos_backend.api
 
+import com.desapabandara.pos_backend.model.request.OrderRequest
 import com.desapabandara.pos_backend.model.request.PosLoginRequest
 import com.desapabandara.pos_backend.model.response.BaseResponse
 import com.desapabandara.pos_backend.model.response.CategoryResponse
@@ -43,4 +44,7 @@ interface DesapaApi {
 
     @GET("tables")
     suspend fun getTables(): Response<BaseResponse<List<TableResponse>>>
+
+    @POST("orders")
+    suspend fun syncOrder(@Body request: OrderRequest): Response<BaseResponse<OrderRequest>>
 }

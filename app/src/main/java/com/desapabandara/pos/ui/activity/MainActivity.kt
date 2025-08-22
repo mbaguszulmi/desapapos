@@ -24,6 +24,7 @@ import co.mbznetwork.android.base.model.PopUpMessage
 import co.mbznetwork.android.base.model.UiMessage
 import co.mbznetwork.android.base.model.UiStatus
 import com.desapabandara.pos.R
+import com.desapabandara.pos.app.DesapaApp
 import com.desapabandara.pos.databinding.ActivityMainBinding
 import com.desapabandara.pos.databinding.PopupErrorBinding
 import com.desapabandara.pos.databinding.PopupMessageBinding
@@ -67,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        (application as DesapaApp).startPosServices()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         initViewBinding()

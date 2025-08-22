@@ -1,9 +1,10 @@
 package com.desapabandara.pos.app
 
 import android.app.Application
+import android.content.Intent
+import android.os.Build
 import com.desapabandara.pos.base.manager.AuthManager
-import com.desapabandara.pos.base.manager.OrderManager
-import com.desapabandara.pos.printer.manager.PrinterManager
+import com.desapabandara.pos.service.PosService
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 import javax.inject.Inject
@@ -13,19 +14,24 @@ class DesapaApp: Application() {
     @Inject
     lateinit var authManager: AuthManager
 
-    @Inject
-    lateinit var orderManager: OrderManager
-
-    @Inject
-    lateinit var printerManager: PrinterManager
+    var posService: Intent? = null
 
     override fun onCreate() {
         super.onCreate()
 
         initTimber()
         authManager.observeLogin()
-        orderManager.start()
-        printerManager.initiateConnections()
+    }
+
+    fun startPosServices() {
+        if (posService == null) {
+            posService = Intent(this, PosService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(posService)
+            } else {
+                startService(posService)
+            }
+        }
     }
 
     private fun initTimber() {

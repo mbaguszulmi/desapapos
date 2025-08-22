@@ -2,6 +2,7 @@ package com.desapabandara.pos.preference.datastore
 
 import co.mbznetwork.android.base.storage.AppDataStore
 import com.desapabandara.pos.preference.LAST_ORDER_NUMBER_KEY
+import com.desapabandara.pos.preference.LAST_ORDER_SYNC
 import com.desapabandara.pos.preference.ORDER_START_DATE_KEY
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,4 +22,10 @@ class OrderDataStore @Inject constructor(
     }
 
     fun getOrderStartDate() = appDataStore.getData(ORDER_START_DATE_KEY, String::class.java)
+
+    suspend fun storeLastOrderSync(time: Long) {
+        appDataStore.editData(LAST_ORDER_SYNC, time)
+    }
+
+    fun getLastOrderSync() = appDataStore.getData(LAST_ORDER_SYNC, Long::class.java)
 }
