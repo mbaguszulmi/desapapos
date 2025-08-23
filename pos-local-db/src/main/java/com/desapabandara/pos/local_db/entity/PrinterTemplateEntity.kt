@@ -9,6 +9,7 @@ data class PrinterTemplateEntity(
     var id: String = "",
     var name: String = "",
     var template: String = "",
+    var type: Int = 4,
     override var createdAt: Long = System.currentTimeMillis(),
     override var deletedAt: Long? = null,
     override var updatedAt: Long = System.currentTimeMillis(),

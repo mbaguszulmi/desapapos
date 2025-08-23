@@ -495,6 +495,7 @@ class OrderManager @Inject constructor(
                     orderPrintEventBus.publishJob(OrderPrintJob(
                         it.apply {
                             orderStatus = OrderStatus.Completed
+                            paymentStatus = PaymentStatus.Settled
                             this.createdAt = Date(this@order.createdAt)
                         }
                     ))

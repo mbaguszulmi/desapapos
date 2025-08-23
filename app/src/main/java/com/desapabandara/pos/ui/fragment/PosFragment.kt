@@ -80,6 +80,7 @@ class PosFragment : Fragment() {
             categoryRv.apply {
                 layoutManager = LinearLayoutManager(requireContext())
                 adapter = categoryAdapter
+                itemAnimator = null
             }
         }
     }

@@ -13,6 +13,7 @@ import com.dantsu.escposprinter.connection.bluetooth.BluetoothConnection
 import com.desapabandara.pos.base.eventbus.OrderPrintEventBus
 import com.desapabandara.pos.base.manager.OrderManager
 import com.desapabandara.pos.base.model.ItemStatus
+import com.desapabandara.pos.base.model.PrinterTemplateType
 import com.desapabandara.pos.local_db.dao.LocationDao
 import com.desapabandara.pos.local_db.dao.PrinterDao
 import com.desapabandara.pos.local_db.dao.PrinterLocationDao
@@ -90,15 +91,70 @@ class PrinterManager @Inject constructor(
                     val devices = getPrinterDevicesByLocationId(location.id)
                     printerTemplateDao.getPrinterTemplate(location.printerTemplateId)?.let { printerTemplate ->
                         if (location.id == "1") {
-                            devices.map { device ->
-                                PrintTask(
-                                    location,
-                                    device,
-                                    it.order,
-                                    it.reprint,
-                                    it.schedulePrint,
-                                    printerTemplate
+                            val tableCheckerTemplate = if (!it.receiptOnly) {
+                                printerTemplateDao.getPrinterTemplateByType(PrinterTemplateType.TableChecker.id)
+                            } else null
+
+                            val checkerOrder = if (tableCheckerTemplate != null) {
+                                it.order.copy(
+                                    orderItems = it.order.orderItems.filter { item ->
+                                        item.status == ItemStatus.New
+                                    }
                                 )
+                            } else {
+                                null
+                            }
+
+                            val docketTemplate = if (!it.receiptOnly) {
+                                printerTemplateDao.getPrinterTemplateByType(PrinterTemplateType.Docket.id)
+                            } else null
+
+                            val docketOrder = if (docketTemplate != null) {
+                                it.order.copy(
+                                    orderItems = it.order.orderItems.filter { item ->
+                                        if (item.status != ItemStatus.New) return@filter false
+
+                                        val product = productDao.getProductById(item.productId)
+                                        product?.locationId == location.id
+                                    }
+                                ).let { o ->
+                                    if (o.orderItems.isEmpty()) null else o
+                                }
+                            } else null
+
+                            devices.flatMap { device ->
+                                mutableListOf<PrintTask>().apply {
+                                    add(PrintTask(
+                                        location,
+                                        device,
+                                        it.order,
+                                        it.reprint,
+                                        it.schedulePrint,
+                                        printerTemplate
+                                    ))
+
+                                    if (checkerOrder != null && tableCheckerTemplate != null) {
+                                        add(PrintTask(
+                                            location,
+                                            device,
+                                            checkerOrder,
+                                            it.reprint,
+                                            it.schedulePrint,
+                                            tableCheckerTemplate
+                                        ))
+                                    }
+
+                                    if (docketOrder != null && docketTemplate != null) {
+                                        add(PrintTask(
+                                            location,
+                                            device,
+                                            docketOrder,
+                                            it.reprint,
+                                            it.schedulePrint,
+                                            docketTemplate
+                                        ))
+                                    }
+                                }
                             }
                         } else {
                             val order = it.order.copy(

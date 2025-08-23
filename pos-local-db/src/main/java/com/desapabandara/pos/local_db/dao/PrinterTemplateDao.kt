@@ -8,4 +8,7 @@ import com.desapabandara.pos.local_db.entity.PrinterTemplateEntity
 abstract class PrinterTemplateDao: BaseDao<PrinterTemplateEntity>("PrinterTemplateEntity") {
     @Query("SELECT * FROM PrinterTemplateEntity WHERE id = :id")
     abstract suspend fun getPrinterTemplate(id: String): PrinterTemplateEntity?
+
+    @Query("SELECT * FROM PrinterTemplateEntity WHERE type = :type")
+    abstract suspend fun getPrinterTemplateByType(type: Int): PrinterTemplateEntity?
 }

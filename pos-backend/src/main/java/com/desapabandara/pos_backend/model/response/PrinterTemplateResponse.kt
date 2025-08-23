@@ -9,6 +9,7 @@ data class PrinterTemplateResponse(
     val template: String = "",
     @SerializedName("store_id")
     val storeId: String = "",
+    val type: Int = 4,
     @SerializedName("created_at")
     val createdAt: Date = Date(),
     @SerializedName("deleted_at")

@@ -57,6 +57,7 @@ class PosProductFragment : Fragment(), FragmentKtx {
             productRv.apply {
                 adapter = productAdapter
                 setupDynamicGrid(100.dp, 0)
+                itemAnimator = null
             }
         }
     }

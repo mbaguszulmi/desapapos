@@ -41,8 +41,10 @@ fun setOrderTypeText(textView: TextView, orderType: OrderType) {
 
 @BindingAdapter("android:text")
 fun setText(view: EditText, value: Int) {
-    view.setText(value.toString())
-    view.setSelection(value.toString().length)
+    if (value.toString() != view.text.toString()) {
+        view.setText(value.toString())
+        view.setSelection(value.toString().length)
+    }
 }
 
 @InverseBindingAdapter(attribute = "android:text", event = "android:textAttrChanged")

@@ -202,6 +202,7 @@ class DataSyncViewModel @Inject constructor(
                             id,
                             name,
                             template,
+                            type,
                             createdAt.time,
                             deletedAt?.time,
                             updatedAt.time

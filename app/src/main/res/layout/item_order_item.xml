@@ -42,7 +42,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@color/white">
+            android:background="@color/white"
+            android:onClick="@{() -> void}">
 
             <TextView
                 android:id="@+id/tv_quantity"

@@ -7,6 +7,7 @@ import co.mbznetwork.android.base.eventbus.FragmentStateEventBus
 import com.desapabandara.pos.base.manager.OrderManager
 import com.desapabandara.pos.model.ui.OrderItemDisplay
 import com.desapabandara.pos.base.util.CurrencyUtil
+import com.desapabandara.pos.local_db.dao.OrderItemDao
 import com.desapabandara.pos.model.ui.ItemDetailsResult
 import com.desapabandara.pos.ui.fragment.ItemDetailsFragment
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +24,7 @@ class CartViewModel @Inject constructor(
     private val orderManager: OrderManager,
     private val currencyUtil: CurrencyUtil,
     private val fragmentStateEventBus: FragmentStateEventBus,
+    private val orderItemDao: OrderItemDao,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): ViewModel() {
     private var itemDetailsJob: Job? = null
@@ -95,7 +97,8 @@ class CartViewModel @Inject constructor(
         viewModelScope.launch(ioDispatcher) {
             itemDetailsJob?.cancel()
             itemDetailsJob = awaitItemDetailsResult()
-            fragmentStateEventBus.setCurrentState(ItemDetailsFragment.newInstance(id), true)
+            val item = orderItemDao.getOrderItemById(id) ?: return@launch
+            fragmentStateEventBus.setCurrentState(ItemDetailsFragment.newInstance(item), true)
         }
     }
 

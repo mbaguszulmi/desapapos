@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.desapabandara.pos.local_db.database.DESAPA_DB
 import com.desapabandara.pos.local_db.database.DesapaDB
+import com.desapabandara.pos.local_db.database.MIGRATION_1_2
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,7 +19,9 @@ object DatabaseModule {
     @Singleton
     fun provideDesapaDB(
         @ApplicationContext context: Context
-    ) = Room.databaseBuilder(context, DesapaDB::class.java, DESAPA_DB).build()
+    ) = Room.databaseBuilder(context, DesapaDB::class.java, DESAPA_DB).addMigrations(
+        MIGRATION_1_2
+    ).build()
 
     @Provides
     @Singleton

@@ -50,7 +50,7 @@ const val DESAPA_DB = "desapa.db"
         PrinterEntity::class,
         PrinterLocationEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class DesapaDB: RoomDatabase() {

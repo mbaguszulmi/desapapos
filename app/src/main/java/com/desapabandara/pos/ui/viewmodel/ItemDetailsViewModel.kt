@@ -11,9 +11,9 @@ import co.mbznetwork.android.base.model.UiStatus
 import com.desapabandara.pos.R
 import com.desapabandara.pos.base.model.ItemInfo
 import com.desapabandara.pos.local_db.dao.OrderItemDao
+import com.desapabandara.pos.local_db.entity.OrderItemEntity
 import com.desapabandara.pos.model.ui.ItemDetailsResult
-import com.desapabandara.pos.ui.fragment.ARG_CATEGORY_ID
-import com.desapabandara.pos.ui.fragment.ARG_ITEM_ID
+import com.desapabandara.pos.ui.fragment.ARG_ITEM
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +30,7 @@ class ItemDetailsViewModel @Inject constructor(
 ): ViewModel() {
     private val id = MutableStateFlow("")
     val itemName = MutableStateFlow("")
-    val quantity = MutableStateFlow(0)
+    val quantity = MutableStateFlow(1)
     val note = MutableStateFlow("")
     val isTakeaway = MutableStateFlow(false)
 
@@ -40,24 +40,18 @@ class ItemDetailsViewModel @Inject constructor(
 
     private fun populateItemDetails() {
         viewModelScope.launch(ioDispatcher) {
-            val itemId = savedStateHandle.get<String>(ARG_ITEM_ID)
-            if (itemId == null) {
+            val item = savedStateHandle.get<OrderItemEntity>(ARG_ITEM)
+            if (item == null) {
                 dismiss()
                 return@launch
             }
 
-            id.value = itemId
+            id.value = item.id
 
-            val orderItem = orderItemDao.getOrderItemById(itemId)
-            if (orderItem == null) {
-                dismiss()
-                return@launch
-            }
-
-            itemName.value = orderItem.name
-            quantity.value = orderItem.quantity.toInt()
-            note.value = orderItem.itemNote
-            isTakeaway.value = orderItem.isTakeaway
+            itemName.value = item.name
+            quantity.emit(item.quantity.toInt())
+            note.value = item.itemNote
+            isTakeaway.value = item.isTakeaway
         }
     }
 

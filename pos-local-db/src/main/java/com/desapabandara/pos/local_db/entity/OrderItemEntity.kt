@@ -1,9 +1,12 @@
 package com.desapabandara.pos.local_db.entity
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
 @Entity
+@Parcelize
 data class OrderItemEntity(
     @PrimaryKey
     var id: String,
@@ -22,4 +25,4 @@ data class OrderItemEntity(
     override var createdAt: Long = System.currentTimeMillis(),
     override var deletedAt: Long? = null,
     override var updatedAt: Long = System.currentTimeMillis(),
-): BaseEntity()
+): BaseEntity(), Parcelable
