@@ -55,4 +55,5 @@
     <string name="item_quantity_error">Quantity must be greater than 0</string>
     <string name="cancel">Cancel</string>
     <string name="version_display">Version %1s</string>
+    <string name="incorrect_pin">Incorrect PIN</string>
 </resources>

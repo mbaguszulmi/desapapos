@@ -35,6 +35,7 @@ import com.desapabandara.pos.ui.fragment.LoginFragment
 import com.desapabandara.pos.ui.fragment.OrderHistoryFragment
 import com.desapabandara.pos.ui.fragment.PosFragment
 import com.desapabandara.pos.ui.fragment.SettingsFragment
+import com.desapabandara.pos.ui.fragment.StaffLoginFragment
 import com.desapabandara.pos.ui.fragment.SyncFragment
 import com.desapabandara.pos.ui.popup.MessagePopup
 import com.desapabandara.pos.ui.viewmodel.MainViewModel
@@ -80,7 +81,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeFragmentState() {
-        observeOnLifecycle(Lifecycle.State.CREATED) {
+        observeOnLifecycle(Lifecycle.State.RESUMED) {
             fragmentStateEventBus.currentState.collect {
                 when (it) {
                     is FragmentState.NA -> {
@@ -140,7 +141,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeActiveMainMenu() {
-        observeOnLifecycle(Lifecycle.State.CREATED) {
+        observeOnLifecycle(Lifecycle.State.RESUMED) {
             mainViewModel.activeMainMenu.collect {
                 when(it) {
                     MainMenu.POS -> PosFragment()
@@ -156,11 +157,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeMainScreen() {
-        observeOnLifecycle(Lifecycle.State.CREATED) {
+        observeOnLifecycle(Lifecycle.State.RESUMED) {
             mainViewModel.mainScreen.collect {
                 when(it) {
                     MainScreen.Login -> LoginFragment()
                     MainScreen.Sync -> SyncFragment()
+                    MainScreen.StaffLogin -> StaffLoginFragment()
                     MainScreen.Main -> {
                         mainViewModel.selectMainMenu(MainMenu.POS)
                         null

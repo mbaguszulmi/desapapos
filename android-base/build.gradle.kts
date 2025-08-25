@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    implementation(libs.glide)
+    ksp(libs.glide.ksp)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

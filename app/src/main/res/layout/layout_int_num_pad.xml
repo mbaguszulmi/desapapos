@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="numVM"
+            type="com.desapabandara.pos.ui.viewmodel.NumPadViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/text_num"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            tools:text="1234"
+            android:text="@{numVM.numberDisplay}"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_grey_rounded"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"/>
+
+        <TextView
+            android:id="@+id/num_1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="1"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toBottomOf="@id/text_num"
+            app:layout_constraintStart_toStartOf="@id/text_num"
+            app:layout_constraintEnd_toStartOf="@id/num_2"
+            android:background="@drawable/bg_grey_rounded"
+            android:layout_marginTop="16dp"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(1)}"/>
+
+        <TextView
+            android:id="@+id/num_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="2"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toTopOf="@id/num_1"
+            app:layout_constraintStart_toEndOf="@id/num_1"
+            app:layout_constraintEnd_toStartOf="@id/num_3"
+            android:layout_marginHorizontal="16dp"
+            android:background="@drawable/bg_grey_rounded"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(2)}"/>
+
+        <TextView
+            android:id="@+id/num_3"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="3"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toTopOf="@id/num_1"
+            app:layout_constraintStart_toEndOf="@id/num_2"
+            app:layout_constraintEnd_toEndOf="@id/text_num"
+            android:background="@drawable/bg_grey_rounded"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(3)}"/>
+
+        <TextView
+            android:id="@+id/num_4"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="4"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toBottomOf="@id/num_1"
+            app:layout_constraintStart_toStartOf="@id/num_1"
+            app:layout_constraintEnd_toEndOf="@id/num_1"
+            android:background="@drawable/bg_grey_rounded"
+            android:layout_marginTop="16dp"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(4)}"/>
+
+        <TextView
+            android:id="@+id/num_5"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="5"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toTopOf="@id/num_4"
+            app:layout_constraintStart_toStartOf="@id/num_2"
+            app:layout_constraintEnd_toEndOf="@id/num_2"
+            android:background="@drawable/bg_grey_rounded"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(5)}"/>
+
+        <TextView
+            android:id="@+id/num_6"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="6"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toTopOf="@id/num_4"
+            app:layout_constraintStart_toStartOf="@id/num_3"
+            app:layout_constraintEnd_toEndOf="@id/num_3"
+            android:background="@drawable/bg_grey_rounded"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(6)}"/>
+
+        <TextView
+            android:id="@+id/num_7"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="7"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toBottomOf="@id/num_4"
+            app:layout_constraintStart_toStartOf="@id/num_1"
+            app:layout_constraintEnd_toEndOf="@id/num_1"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_grey_rounded"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(7)}"/>
+
+        <TextView
+            android:id="@+id/num_8"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="8"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toTopOf="@id/num_7"
+            app:layout_constraintStart_toStartOf="@id/num_2"
+            app:layout_constraintEnd_toEndOf="@id/num_2"
+            android:background="@drawable/bg_grey_rounded"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(8)}"/>
+
+        <TextView
+            android:id="@+id/num_9"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="9"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toTopOf="@id/num_7"
+            app:layout_constraintStart_toStartOf="@id/num_3"
+            app:layout_constraintEnd_toEndOf="@id/num_3"
+            android:background="@drawable/bg_grey_rounded"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(9)}"/>
+
+        <ImageView
+            android:id="@+id/num_del"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:src="@drawable/ic_backspace"
+            android:scaleType="centerInside"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toBottomOf="@id/num_7"
+            app:layout_constraintStart_toStartOf="@id/num_1"
+            app:layout_constraintEnd_toEndOf="@id/num_1"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_red_rounded"
+            android:onClick="@{() -> numVM.del()}"/>
+
+        <TextView
+            android:id="@+id/num_0"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="0"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toTopOf="@id/num_del"
+            app:layout_constraintStart_toStartOf="@id/num_2"
+            app:layout_constraintEnd_toEndOf="@id/num_2"
+            android:background="@drawable/bg_grey_rounded"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:onClick="@{() -> numVM.tapInt(0)}"/>
+
+        <ImageView
+            android:id="@+id/btn_confirm"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:src="@drawable/ic_circle_check"
+            android:scaleType="centerInside"
+            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintTop_toTopOf="@id/num_del"
+            app:layout_constraintStart_toStartOf="@id/num_3"
+            app:layout_constraintEnd_toEndOf="@id/num_3"
+            android:background="@drawable/bg_primary_rounded"
+            android:onClick="@{() -> numVM.confirm()}"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

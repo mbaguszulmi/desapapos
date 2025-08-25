@@ -230,7 +230,7 @@ class OrderPrintParser @Inject constructor(
         return parseTemplateTag("DIVIDER") { text, range, attrs ->
             val doubleDash = attrs[TemplateAttr.DoubleDash.attrName] == "true"
             val charLength =
-                (PaperWidth.fromWidth(printerData.paperWidth) ?: PaperWidth.W48).characters
+                (PaperWidth.fromWidth(printerData.paperWidth) ?: PaperWidth.W58).characters
             val formattedTest = "[C]" + (if (doubleDash) "=" else "-").repeat(charLength)
 
             text.replaceRange(range, formattedTest)

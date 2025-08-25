@@ -13,6 +13,7 @@ import com.dantsu.escposprinter.connection.bluetooth.BluetoothConnection
 import com.desapabandara.pos.base.eventbus.OrderPrintEventBus
 import com.desapabandara.pos.base.manager.OrderManager
 import com.desapabandara.pos.base.model.ItemStatus
+import com.desapabandara.pos.base.model.OrderStatus
 import com.desapabandara.pos.base.model.PrinterTemplateType
 import com.desapabandara.pos.local_db.dao.LocationDao
 import com.desapabandara.pos.local_db.dao.PrinterDao
@@ -100,7 +101,9 @@ class PrinterManager @Inject constructor(
                                     orderItems = it.order.orderItems.filter { item ->
                                         item.status == ItemStatus.New
                                     }
-                                )
+                                ).let { o ->
+                                    if (o.orderItems.isEmpty()) null else o
+                                }
                             } else {
                                 null
                             }
@@ -124,14 +127,16 @@ class PrinterManager @Inject constructor(
 
                             devices.flatMap { device ->
                                 mutableListOf<PrintTask>().apply {
-                                    add(PrintTask(
-                                        location,
-                                        device,
-                                        it.order,
-                                        it.reprint,
-                                        it.schedulePrint,
-                                        printerTemplate
-                                    ))
+                                    if (it.order.orderStatus == OrderStatus.Completed) {
+                                        add(PrintTask(
+                                            location,
+                                            device,
+                                            it.order,
+                                            it.reprint,
+                                            it.schedulePrint,
+                                            printerTemplate
+                                        ))
+                                    }
 
                                     if (checkerOrder != null && tableCheckerTemplate != null) {
                                         add(PrintTask(
@@ -190,12 +195,12 @@ class PrinterManager @Inject constructor(
                     if (!printFormatted(
                         parsedText,
                         task.printerDevice.printerData.id,
-                        if (task.location.id == "") {
+                        if (task.printerTemplate.type != PrinterTemplateType.Docket.id) {
                             0f
                         } else {
                             15f
                         },
-                        task.location.id == ""
+                        task.printerTemplate.type == PrinterTemplateType.Receipt.id
                     )) {
                         isSucceeded = false
                     } else {

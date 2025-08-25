@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothAdapter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.mbznetwork.android.base.di.IoDispatcher
-import co.mbznetwork.android.base.eventbus.FragmentState
 import co.mbznetwork.android.base.eventbus.FragmentStateEventBus
 import co.mbznetwork.android.base.eventbus.UIStatusEventBus
 import co.mbznetwork.android.base.model.UiMessage
@@ -16,15 +15,11 @@ import com.desapabandara.pos.model.ui.PrinterDeviceScanResult
 import com.desapabandara.pos.model.ui.PrinterDisplay
 import com.desapabandara.pos.printer.manager.PrinterManager
 import com.desapabandara.pos.printer.model.PaperWidth
-import com.desapabandara.pos.ui.adapter.PrinterListAdapter
 import com.desapabandara.pos.ui.fragment.ScanPrinterFragment
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject

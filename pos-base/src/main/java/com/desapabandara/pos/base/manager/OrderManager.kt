@@ -8,6 +8,7 @@ import co.mbznetwork.android.base.model.UiStatus
 import co.mbznetwork.android.base.util.DateUtil
 import com.desapabandara.pos.base.R
 import com.desapabandara.pos.base.eventbus.OrderPrintEventBus
+import com.desapabandara.pos.base.eventbus.StaffLoginEventBus
 import com.desapabandara.pos.base.model.ItemInfo
 import com.desapabandara.pos.base.model.ItemStatus
 import com.desapabandara.pos.base.model.OrderStatus
@@ -64,12 +65,12 @@ class OrderManager @Inject constructor(
     private val tableDao: TableDao,
     private val orderDataStore: OrderDataStore,
     private val authDataStore: AuthDataStore,
-    private val authManager: AuthManager,
     private val productDao: ProductDao,
     private val paymentMethodDao: PaymentMethodDao,
     private val uiStatusEventBus: UIStatusEventBus,
     private val staffDao: StaffDao,
     private val orderPrintEventBus: OrderPrintEventBus,
+    private val staffLoginEventBus: StaffLoginEventBus,
     @DeviceID private val deviceId: String
 ) {
     private var scope: CoroutineScope? = null
@@ -235,7 +236,7 @@ class OrderManager @Inject constructor(
     }
 
     private suspend fun createEmptyOrder(): String {
-        val currentStaff = authManager.currentStaff.value
+        val currentStaff = staffLoginEventBus.currentStaff.value
 
         val orderId = UUID.randomUUID().toString()
         generateOrderNumberAndInvoice().run {

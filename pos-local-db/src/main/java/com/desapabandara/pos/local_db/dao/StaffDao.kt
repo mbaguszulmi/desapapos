@@ -12,4 +12,7 @@ abstract class StaffDao: BaseDao<StaffEntity>("StaffEntity") {
 
     @Query("SELECT * FROM StaffEntity WHERE id = :id")
     abstract suspend fun getStaffByIdSingle(id: String): StaffEntity?
+
+    @Query("SELECT * FROM StaffEntity WHERE pin = :pin")
+    abstract suspend fun getStaffByPin(pin: String): StaffEntity?
 }

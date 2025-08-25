@@ -4,5 +4,6 @@ enum class MainScreen {
     None,
     Login,
     Sync,
+    StaffLogin,
     Main
 }

@@ -4,7 +4,7 @@ enum class PaperWidth(
     val width: Int,
     val characters: Int
 ) {
-    W48(48, 32),
+    W58(58, 32),
     W80(80, 48);
 
     companion object {
