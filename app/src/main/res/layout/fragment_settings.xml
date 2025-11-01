@@ -43,6 +43,21 @@
                 android:background="@color/divider"/>
 
             <TextView
+                android:id="@+id/settings_staff_assignments"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/staff_assignments"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:onClick="@{() -> vm.selectSetting(SettingsScreen.StaffAssignments)}"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider"/>
+
+            <TextView
                 android:id="@+id/settings_printers"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"

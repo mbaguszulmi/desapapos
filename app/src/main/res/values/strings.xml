@@ -56,4 +56,9 @@
     <string name="cancel">Cancel</string>
     <string name="version_display">Version %1s</string>
     <string name="incorrect_pin">Incorrect PIN</string>
+    <string name="staff_assignments">Staff Assignments</string>
+    <string name="staff_original_location">Original: %1s</string>
+    <string name="assign">Assign</string>
+    <string name="waiter">Waiter</string>
+    <string name="select_waiter">Select Waiter</string>
 </resources>

@@ -42,6 +42,7 @@ class OrderPrintParser @Inject constructor(
             .parseOrderNumber(order)
             .parseOrderTypeData(order)
             .parseStaffName(order)
+            .parseWaiterName(order)
             .parseOrderTimestamp(order)
             .parseOrderItems(order)
             .parseOrderSubtotal(order)
@@ -91,6 +92,10 @@ class OrderPrintParser @Inject constructor(
 
     private fun String.parseStaffName(order: Order): String {
         return replaceTemplateTag("STAFF_NAME", order.staff?.name ?: "-")
+    }
+
+    private fun String.parseWaiterName(order: Order): String {
+        return replaceTemplateTag("WAITER_NAME", order.waiter?.name ?: "-")
     }
 
     private fun String.parseOrderTimestamp(order: Order): String {

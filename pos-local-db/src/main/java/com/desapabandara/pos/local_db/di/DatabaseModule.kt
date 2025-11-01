@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.desapabandara.pos.local_db.database.DESAPA_DB
 import com.desapabandara.pos.local_db.database.DesapaDB
 import com.desapabandara.pos.local_db.database.MIGRATION_1_2
+import com.desapabandara.pos.local_db.database.MIGRATION_2_3
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,7 +21,8 @@ object DatabaseModule {
     fun provideDesapaDB(
         @ApplicationContext context: Context
     ) = Room.databaseBuilder(context, DesapaDB::class.java, DESAPA_DB).addMigrations(
-        MIGRATION_1_2
+        MIGRATION_1_2,
+        MIGRATION_2_3
     ).build()
 
     @Provides
@@ -107,4 +109,27 @@ object DatabaseModule {
         desapaDB: DesapaDB
     ) = desapaDB.getPrinterLocationDao()
 
+    @Provides
+    @Singleton
+    fun provideItemStaffDao(
+        desapaDB: DesapaDB
+    ) = desapaDB.getItemStaffDao()
+
+    @Provides
+    @Singleton
+    fun provideItemStatusChangesDao(
+        desapaDB: DesapaDB
+    ) = desapaDB.getItemStatusChangesDao()
+
+    @Provides
+    @Singleton
+    fun provideOrderStatusChangesDao(
+        desapaDB: DesapaDB
+    ) = desapaDB.getOrderStatusChangesDao()
+
+    @Provides
+    @Singleton
+    fun provideStaffLocationAssignmentDao(
+        desapaDB: DesapaDB
+    ) = desapaDB.getStaffLocationAssignmentDao()
 }

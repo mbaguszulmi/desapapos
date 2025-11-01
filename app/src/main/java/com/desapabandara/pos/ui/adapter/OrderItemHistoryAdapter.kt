@@ -9,7 +9,10 @@ import com.desapabandara.pos.databinding.ItemOrderItemHistoryBinding
 import com.desapabandara.pos.databinding.ItemOrderItemNoteBinding
 import com.desapabandara.pos.model.ui.OrderItemDisplay
 
-class OrderItemHistoryAdapter: ListAdapter<OrderItemDisplay, OrderItemHistoryAdapter.ViewHolder>(ITEM_DIFF) {
+class OrderItemHistoryAdapter(
+    private val onTogglePrepared: (OrderItemDisplay.ItemDetailed) -> Unit,
+    private val onToggleServed: (OrderItemDisplay.ItemDetailed) -> Unit
+): ListAdapter<OrderItemDisplay, OrderItemHistoryAdapter.ViewHolder>(ITEM_DIFF) {
     sealed class ViewHolder(root: View): RecyclerView.ViewHolder(root) {
         abstract fun bind(item: OrderItemDisplay)
     }
@@ -19,7 +22,14 @@ class OrderItemHistoryAdapter: ListAdapter<OrderItemDisplay, OrderItemHistoryAda
     ): ViewHolder(binding.root) {
         override fun bind(item: OrderItemDisplay) {
             binding.apply {
-                orderItem = item as OrderItemDisplay.Item
+                orderItem = item as OrderItemDisplay.ItemDetailed
+                btnTogglePrepared.setOnClickListener {
+                    onTogglePrepared(item)
+                }
+
+                btnToggleServed.setOnClickListener {
+                    onToggleServed(item)
+                }
 
                 executePendingBindings()
             }
@@ -60,7 +70,7 @@ class OrderItemHistoryAdapter: ListAdapter<OrderItemDisplay, OrderItemHistoryAda
 
     override fun getItemViewType(position: Int): Int {
         return when(getItem(position)) {
-            is OrderItemDisplay.Item -> TYPE_ITEM
+            is OrderItemDisplay.ItemDetailed -> TYPE_ITEM
             else -> TYPE_NOTE
         }
     }

@@ -10,12 +10,15 @@ import co.mbznetwork.android.base.model.UiStatus
 import com.desapabandara.pos.R
 import com.desapabandara.pos.base.manager.OrderManager
 import com.desapabandara.pos.base.model.OrderType
+import com.desapabandara.pos.local_db.dao.StaffDao
 import com.desapabandara.pos.local_db.dao.TableDao
 import com.desapabandara.pos.model.ui.SetOrderTypeResult
+import com.desapabandara.pos.model.ui.StaffAdapterDisplay
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -27,6 +30,7 @@ class SetOrderTypeViewModel @Inject constructor(
     private val fragmentStateEventBus: FragmentStateEventBus,
     private val uiStateEventBus: UIStatusEventBus,
     private val tableDao: TableDao,
+    private val staffDao: StaffDao,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ): ViewModel() {
 
@@ -35,6 +39,25 @@ class SetOrderTypeViewModel @Inject constructor(
     val orderType = orderManager.currentOrder.map {
         it?.orderType ?: OrderType.EatIn
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), OrderType.EatIn)
+
+    val staffs = staffDao.getAll().map { list ->
+        list.map {
+            StaffAdapterDisplay(
+                id = it.id,
+                name = it.name
+            )
+        }.toMutableList()
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, mutableListOf())
+
+    val selectedWaiter = combine(
+        orderManager.currentOrder,
+        staffs
+    ) { order, staffs ->
+        order?.waiterId?.let { waiterId ->
+            val idx = staffs.indexOfFirst { staff -> staff.id == waiterId }
+            if (idx >= 0) idx to staffs[idx] else null
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
 
     init {
         initializeTableNumber()
@@ -84,5 +107,9 @@ class SetOrderTypeViewModel @Inject constructor(
 
     fun dismiss() {
         fragmentStateEventBus.currentStateFinished(SetOrderTypeResult.None)
+    }
+
+    fun setSelectedWaiter(it: StaffAdapterDisplay) {
+        orderManager.selectWaiter(it.id)
     }
 }

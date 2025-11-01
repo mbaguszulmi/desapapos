@@ -25,7 +25,14 @@ class OrderDetailFragment : Fragment() {
     private val orderDetailViewModel by viewModels<OrderDetailViewModel>()
 
     private val orderItemAdapter by lazy(LazyThreadSafetyMode.NONE) {
-        OrderItemHistoryAdapter()
+        OrderItemHistoryAdapter(
+            onTogglePrepared = { item ->
+                orderDetailViewModel.toggleItemPrepared(item)
+            },
+            onToggleServed = { item ->
+                orderDetailViewModel.toggleItemServed(item)
+            }
+        )
     }
 
     override fun onCreateView(

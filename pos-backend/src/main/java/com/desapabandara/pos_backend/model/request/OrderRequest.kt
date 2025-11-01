@@ -64,7 +64,26 @@ data class OrderRequest(
     @SerializedName("order_items")
     var orderItems: List<OrderItemRequest> = emptyList(),
     var payments: List<OrderPaymentRequest> = emptyList(),
-    var table: OrderTableRequest? = null
+    var table: OrderTableRequest? = null,
+    @SerializedName("waiter_id")
+    var waiterId: String = "",
+    @SerializedName("order_status_changes")
+    var orderStatusChanges: List<OrderStatusChangeRequest> = emptyList(),
+)
+
+data class OrderStatusChangeRequest(
+    var id: String = "",
+    @SerializedName("order_id")
+    var orderId: String = "",
+    var status: Int = 0,
+    @SerializedName("changed_by")
+    var changedBy: String = "",
+    @SerializedName("created_at")
+    var createdAt: Date = Date(),
+    @SerializedName("deleted_at")
+    var deletedAt: Date? = null,
+    @SerializedName("updated_at")
+    var updatedAt: Date = Date(),
 )
 
 data class OrderItemRequest(
@@ -88,6 +107,39 @@ data class OrderItemRequest(
     var status: Int = 0,
     @SerializedName("item_note")
     var itemNote: String = "",
+    @SerializedName("created_at")
+    var createdAt: Date = Date(),
+    @SerializedName("deleted_at")
+    var deletedAt: Date? = null,
+    @SerializedName("updated_at")
+    var updatedAt: Date = Date(),
+    @SerializedName("item_status_changes")
+    var itemStatusChanges: List<ItemStatusChangeRequest> = emptyList(),
+    @SerializedName("staffs")
+    var staffs: List<ItemStaffRequest> = emptyList(),
+)
+
+data class ItemStatusChangeRequest(
+    var id: String = "",
+    @SerializedName("item_id")
+    var itemId: String = "",
+    var status: Int = 0,
+    @SerializedName("changed_by")
+    var changedBy: String = "",
+    @SerializedName("created_at")
+    var createdAt: Date = Date(),
+    @SerializedName("deleted_at")
+    var deletedAt: Date? = null,
+    @SerializedName("updated_at")
+    var updatedAt: Date = Date(),
+)
+
+data class ItemStaffRequest(
+    var id: String = "",
+    @SerializedName("item_id")
+    var itemId: String = "",
+    @SerializedName("staff_id")
+    var staffId: String = "",
     @SerializedName("created_at")
     var createdAt: Date = Date(),
     @SerializedName("deleted_at")

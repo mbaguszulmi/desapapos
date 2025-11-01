@@ -10,6 +10,7 @@ import com.desapabandara.pos.base.R
 import com.desapabandara.pos.base.eventbus.OrderPrintEventBus
 import com.desapabandara.pos.base.eventbus.StaffLoginEventBus
 import com.desapabandara.pos.base.model.ItemInfo
+import com.desapabandara.pos.base.model.ItemStaff
 import com.desapabandara.pos.base.model.ItemStatus
 import com.desapabandara.pos.base.model.OrderStatus
 import com.desapabandara.pos.base.model.OrderType
@@ -31,8 +32,16 @@ import com.desapabandara.pos.base.model.OrderPayment
 import com.desapabandara.pos.base.model.OrderPrintJob
 import com.desapabandara.pos.base.model.OrderStaff
 import com.desapabandara.pos.base.model.OrderTable
+import com.desapabandara.pos.base.model.OrderWaiter
 import com.desapabandara.pos.base.model.Table
+import com.desapabandara.pos.local_db.dao.ItemStaffDao
+import com.desapabandara.pos.local_db.dao.ItemStatusChangesDao
+import com.desapabandara.pos.local_db.dao.OrderStatusChangesDao
 import com.desapabandara.pos.local_db.dao.StaffDao
+import com.desapabandara.pos.local_db.dao.StaffLocationAssignmentDao
+import com.desapabandara.pos.local_db.entity.ItemStaffEntity
+import com.desapabandara.pos.local_db.entity.ItemStatusChangesEntity
+import com.desapabandara.pos.local_db.entity.OrderStatusChangesEntity
 import com.desapabandara.pos.preference.datastore.AuthDataStore
 import com.desapabandara.pos.preference.datastore.OrderDataStore
 import kotlinx.coroutines.CoroutineDispatcher
@@ -69,6 +78,10 @@ class OrderManager @Inject constructor(
     private val paymentMethodDao: PaymentMethodDao,
     private val uiStatusEventBus: UIStatusEventBus,
     private val staffDao: StaffDao,
+    private val staffLocationAssignmentDao: StaffLocationAssignmentDao,
+    private val itemStaffDao: ItemStaffDao,
+    private val itemStatusChangesDao: ItemStatusChangesDao,
+    private val orderStatusChangesDao: OrderStatusChangesDao,
     private val orderPrintEventBus: OrderPrintEventBus,
     private val staffLoginEventBus: StaffLoginEventBus,
     @DeviceID private val deviceId: String
@@ -157,6 +170,7 @@ class OrderManager @Inject constructor(
                 Date(updatedAt),
                 synced,
                 it.orderItems.map { item ->
+                    val staffs = itemStaffDao.getStaffsFromItem(item.id)
                     with(item) {
                         OrderItem(
                             id,
@@ -171,11 +185,12 @@ class OrderManager @Inject constructor(
                             isTaxInclusive,
                             cost,
                             preparingDuration,
-                            com.desapabandara.pos.base.model.ItemStatus.fromId(status) ?: com.desapabandara.pos.base.model.ItemStatus.New,
+                            ItemStatus.fromId(status) ?: ItemStatus.New,
                             itemNote,
                             Date(createdAt),
                             deletedAt?.let { d -> Date(d) },
                             Date(updatedAt),
+                            staffs.map { s -> ItemStaff(s.id, s.staffId) }
                         )
                     }
                 },
@@ -196,7 +211,13 @@ class OrderManager @Inject constructor(
                 staffDao.getStaffByIdSingle(createdBy)?.run {
                     OrderStaff(id, name)
                 },
-                null
+                null,
+                waiterId,
+                if (waiterId.isNotBlank() && waiterId != "0") {
+                    staffDao.getStaffByIdSingle(waiterId)?.run {
+                        OrderWaiter(id, name)
+                    }
+                } else null,
             )
         }
     }
@@ -265,8 +286,11 @@ class OrderManager @Inject constructor(
                 currentStaff?.id ?: "0",
                 "",
                 "",
+                "",
                 synced = false,
             ))
+
+            addOrderStatusChange(orderId, OrderStatus.Active)
         }
 
         return orderId
@@ -307,6 +331,22 @@ class OrderManager @Inject constructor(
         })
     }
 
+    private suspend fun assignStaffsToItem(itemId: String, locationId: String) {
+        val staffs = staffLocationAssignmentDao.getStaffsAssignedByLocation(locationId)
+
+        if (staffs.isEmpty()) return
+
+        for (staff in staffs) {
+            itemStaffDao.save(
+                ItemStaffEntity(
+                    UUID.randomUUID().toString(),
+                    itemId,
+                    staff.staffId
+                )
+            )
+        }
+    }
+
     fun addOrderItem(productId: String) {
         scope?.launch {
             val orderId = currentOrder.value?.id ?: createEmptyOrder()
@@ -323,9 +363,10 @@ class OrderManager @Inject constructor(
             val existingItem = orderItemDao.getOrderItemByProductIdAndOrderId(orderId, productId, ItemStatus.New.id)
 
             if (existingItem == null) {
+                val itemId = UUID.randomUUID().toString()
                 orderItemDao.save(
                     OrderItemEntity(
-                        UUID.randomUUID().toString(),
+                        itemId,
                         orderId,
                         product.id,
                         product.name,
@@ -340,6 +381,9 @@ class OrderManager @Inject constructor(
                         ""
                     )
                 )
+
+                addItemStatusChange(itemId, ItemStatus.New)
+                assignStaffsToItem(itemId, product.locationId)
             } else {
                 existingItem.apply {
                     quantity += 1.0
@@ -362,6 +406,8 @@ class OrderManager @Inject constructor(
         scope?.launch {
             val orderItem = orderItemDao.getOrderItemById(itemId) ?: return@launch
 
+            itemStaffDao.deleteStaffsFromItem(itemId)
+            itemStatusChangesDao.deleteChangesFromItem(itemId)
             orderItemDao.delete(orderItem)
 
             calculateOrder(orderItem.orderId)
@@ -371,8 +417,14 @@ class OrderManager @Inject constructor(
     fun clearCurrentOrder() {
         scope?.launch {
             currentOrder.value?.let {
+                val items = orderItemDao.getOrderItemsByOrder(it.id)
+                items.forEach { item ->
+                    itemStaffDao.deleteStaffsFromItem(item.id)
+                    itemStatusChangesDao.deleteChangesFromItem(item.id)
+                }
                 orderItemDao.deleteItemsInOrder(it.id)
                 orderTableDao.deleteTableFromOrder(it.id)
+                orderStatusChangesDao.deleteChangesFromOrder(it.id)
                 orderDao.deleteOrder(it.id)
 
                 var lastOrderNumber = orderDataStore.getLastOrderNumber().first()
@@ -423,17 +475,28 @@ class OrderManager @Inject constructor(
     fun sendOrder() {
         scope?.launch {
             currentOrder.value?.let {
+                if (it.waiterId.isBlank() || it.waiterId == "0") {
+                    uiStatusEventBus.setUiStatus(UiStatus.ShowError(
+                        UiMessage.ResourceMessage(R.string.select_waiter_error)
+                    ))
+                    return@launch
+                }
+
                 orderDao.getOrderById(it.id)?.apply {
                     val updateTime = System.currentTimeMillis()
                     this.orderStatus = OrderStatus.Sent.id
                     createdAt = updateTime
 
                     orderDao.update(this)
+                    addOrderStatusChange(it.id, OrderStatus.Sent)
+
                     orderPrintEventBus.publishJob(OrderPrintJob(
                         it.apply {
                             this.createdAt = Date(updateTime)
                         },
                     ))
+
+                    markItemsSentAndPrinted(it.id)
                 }
             }
         }
@@ -461,6 +524,7 @@ class OrderManager @Inject constructor(
                 this.orderStatus = OrderStatus.Active.id
 
                 orderDao.update(this)
+                addOrderStatusChange(id, OrderStatus.Active)
             }
         }
     }
@@ -471,8 +535,16 @@ class OrderManager @Inject constructor(
     fun payOrder() {
         scope?.launch {
             currentOrder.value?.let {
+                if (it.waiterId.isBlank() || it.waiterId == "0") {
+                    uiStatusEventBus.setUiStatus(UiStatus.ShowError(
+                        UiMessage.ResourceMessage(R.string.select_waiter_error)
+                    ))
+                    return@launch
+                }
+
                 orderDao.getOrderById(it.id)?.apply order@ {
                     val defaultPaymentMethod = paymentMethodDao.getFirstPaymentMethod()
+                    val orderHasBeenSent = isOrderHasBeenSent()
 
                     orderPaymentDao.save(
                         OrderPaymentEntity(
@@ -487,11 +559,12 @@ class OrderManager @Inject constructor(
                     orderStatus = OrderStatus.Completed.id
                     paymentStatus = PaymentStatus.Settled.id
 
-                    if (!isOrderHasBeenSent()) {
+                    if (!orderHasBeenSent) {
                         createdAt = System.currentTimeMillis()
                     }
 
                     orderDao.update(this)
+                    addOrderStatusChange(it.id, OrderStatus.Completed)
 
                     orderPrintEventBus.publishJob(OrderPrintJob(
                         it.apply {
@@ -500,20 +573,58 @@ class OrderManager @Inject constructor(
                             this.createdAt = Date(this@order.createdAt)
                         }
                     ))
+
+                    markItemsSentAndPrinted(it.id)
                 }
             }
         }
     }
 
-    fun markItemsSentAndPrinted(id: String, itemIds: List<String>) {
+    private suspend fun addItemStatusChange(itemId: String, status: ItemStatus) {
+        itemStatusChangesDao.save(
+            ItemStatusChangesEntity(
+                id = UUID.randomUUID().toString(),
+                itemId = itemId,
+                status = status.id,
+                changedBy = staffLoginEventBus.currentStaff.value?.id ?: "0"
+            )
+        )
+    }
+
+    fun updateOrderItemStatus(orderId: String, itemId: String, status: ItemStatus) {
         scope?.launch {
-            val items = if (itemIds.isEmpty()) orderItemDao.getOrderItemsByOrder(id) else orderItemDao.getOrderItems(itemIds)
+            val orderItem = orderItemDao.getOrderItemById(itemId) ?: return@launch
+
+            orderItemDao.update(orderItem.apply {
+                this.status = status.id
+            })
+
+            addItemStatusChange(itemId, status)
+
+            orderDao.setUpdatedAt(orderId)
+        }
+    }
+
+    private fun markItemsSentAndPrinted(orderId: String) {
+        scope?.launch {
+            val items = orderItemDao.getOrderItemsByOrder(orderId).filter {
+                it.status == ItemStatus.New.id
+            }
             items.forEach {
-                orderItemDao.update(it.apply {
-                    status = ItemStatus.Sent.id
-                })
+                updateOrderItemStatus(orderId, it.id, ItemStatus.Sent)
             }
         }
+    }
+
+    private suspend fun addOrderStatusChange(orderId: String, status: OrderStatus) {
+        orderStatusChangesDao.save(
+            OrderStatusChangesEntity(
+                id = UUID.randomUUID().toString(),
+                orderId = orderId,
+                status = status.id,
+                changedBy = staffLoginEventBus.currentStaff.value?.id ?: "0"
+            )
+        )
     }
 
     fun addCustomer(
@@ -551,6 +662,18 @@ class OrderManager @Inject constructor(
             })
 
             calculateOrder(orderItem.orderId)
+        }
+    }
+
+    fun selectWaiter(staffId: String) {
+        scope?.launch {
+            currentOrder.value?.let {
+                val order = orderDao.getOrderById(it.id) ?: return@let
+
+                orderDao.update(order.apply {
+                    waiterId = staffId
+                })
+            }
         }
     }
 

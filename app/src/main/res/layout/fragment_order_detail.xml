@@ -65,11 +65,22 @@
             android:layout_marginTop="8dp"/>
 
         <TextView
+            android:id="@+id/label_waiter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/waiter"
+            app:layout_constraintTop_toBottomOf="@id/label_staff"
+            app:layout_constraintStart_toStartOf="@id/label_total"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/black_1a"
+            android:layout_marginTop="8dp"/>
+
+        <TextView
             android:id="@+id/label_customer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/customer"
-            app:layout_constraintTop_toBottomOf="@id/label_staff"
+            app:layout_constraintTop_toBottomOf="@id/label_waiter"
             app:layout_constraintStart_toStartOf="@id/label_total"
             android:fontFamily="sans-serif-medium"
             android:textColor="@color/black_1a"
@@ -131,6 +142,15 @@
             android:text="@{vm.staffName}"
             tools:text="Testing"
             app:layout_constraintTop_toTopOf="@id/label_staff"
+            app:layout_constraintStart_toStartOf="@id/tv_invoice"/>
+
+        <TextView
+            android:id="@+id/tv_waiter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{vm.waiterName}"
+            tools:text="Testing"
+            app:layout_constraintTop_toTopOf="@id/label_waiter"
             app:layout_constraintStart_toStartOf="@id/tv_invoice"/>
 
         <TextView

@@ -40,7 +40,14 @@ data class Order(
     var orderPayments: List<OrderPayment>,
     var orderTable: OrderTable?,
     var staff: OrderStaff?,
-    var customer: OrderCustomer?
+    var customer: OrderCustomer?,
+    var waiterId: String,
+    var waiter: OrderWaiter?,
+)
+
+data class OrderWaiter(
+    var id: String,
+    var name: String,
 )
 
 data class OrderItem(
@@ -61,6 +68,12 @@ data class OrderItem(
     var createdAt: Date,
     var deletedAt: Date? = null,
     var updatedAt: Date,
+    var staffs: List<ItemStaff>
+)
+
+data class ItemStaff(
+    var id: String,
+    var staffId: String,
 )
 
 data class OrderPayment(

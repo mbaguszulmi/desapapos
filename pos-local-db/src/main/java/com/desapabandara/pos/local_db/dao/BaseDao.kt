@@ -9,10 +9,13 @@ import androidx.room.Update
 import androidx.room.Upsert
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.desapabandara.pos.local_db.entity.BaseEntity
+import com.desapabandara.pos.local_db.entity.ItemStaffEntity
+import com.desapabandara.pos.local_db.entity.ItemStatusChangesEntity
 import com.desapabandara.pos.local_db.entity.LocationEntity
 import com.desapabandara.pos.local_db.entity.OrderEntity
 import com.desapabandara.pos.local_db.entity.OrderItemEntity
 import com.desapabandara.pos.local_db.entity.OrderPaymentEntity
+import com.desapabandara.pos.local_db.entity.OrderStatusChangesEntity
 import com.desapabandara.pos.local_db.entity.OrderTableEntity
 import com.desapabandara.pos.local_db.entity.PaymentMethodEntity
 import com.desapabandara.pos.local_db.entity.PrinterEntity
@@ -21,6 +24,7 @@ import com.desapabandara.pos.local_db.entity.PrinterTemplateEntity
 import com.desapabandara.pos.local_db.entity.ProductCategoryEntity
 import com.desapabandara.pos.local_db.entity.ProductEntity
 import com.desapabandara.pos.local_db.entity.StaffEntity
+import com.desapabandara.pos.local_db.entity.StaffLocationAssignmentEntity
 import com.desapabandara.pos.local_db.entity.StaffPositionEntity
 import com.desapabandara.pos.local_db.entity.TableEntity
 import kotlinx.coroutines.flow.Flow
@@ -43,7 +47,12 @@ abstract class BaseDao<T: BaseEntity>(
         StaffPositionEntity::class,
         TableEntity::class,
         PrinterEntity::class,
-        PrinterLocationEntity::class
+        PrinterLocationEntity::class,
+        PrinterLocationEntity::class,
+        ItemStaffEntity::class,
+        ItemStatusChangesEntity::class,
+        OrderStatusChangesEntity::class,
+        StaffLocationAssignmentEntity::class
     ])
     protected abstract fun getAllRaw(query: SimpleSQLiteQuery): Flow<List<T>>
 

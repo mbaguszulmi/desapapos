@@ -3,4 +3,5 @@
     <string name="product_is_not_exist">Product is not exist</string>
     <string name="order_completed_error">Order has been completed</string>
     <string name="activate_order_failed">There\'s an active order. Please hold it first.</string>
+    <string name="select_waiter_error">Please select a waiter</string>
 </resources>

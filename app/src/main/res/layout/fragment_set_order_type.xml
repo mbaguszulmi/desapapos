@@ -41,13 +41,33 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/select_order_type"
-            app:layout_constraintBottom_toTopOf="@id/layout_table"
+            app:layout_constraintBottom_toTopOf="@id/layout_waiter"
             app:layout_constraintStart_toStartOf="@id/layout_table"
             app:layout_constraintEnd_toEndOf="@id/layout_table"
             android:layout_marginBottom="16dp"
             android:textSize="16sp"
             android:fontFamily="sans-serif-medium"
             android:textColor="@color/black_1a"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layout_waiter"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/layout_table"
+            app:layout_constraintEnd_toEndOf="@id/layout_table"
+            app:layout_constraintBottom_toTopOf="@id/layout_table"
+            android:layout_marginBottom="8dp">
+
+            <AutoCompleteTextView
+                android:id="@+id/auto_complete_waiter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:hint="@string/select_waiter"
+                android:gravity="center_horizontal"
+                android:imeOptions="actionDone"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layout_table"

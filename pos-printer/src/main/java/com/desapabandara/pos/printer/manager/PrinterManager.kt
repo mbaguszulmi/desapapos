@@ -203,10 +203,6 @@ class PrinterManager @Inject constructor(
                         task.printerTemplate.type == PrinterTemplateType.Receipt.id
                     )) {
                         isSucceeded = false
-                    } else {
-                        orderManager.markItemsSentAndPrinted(it.order.id, task.order.orderItems.map { item ->
-                            item.id
-                        })
                     }
                 }
             }

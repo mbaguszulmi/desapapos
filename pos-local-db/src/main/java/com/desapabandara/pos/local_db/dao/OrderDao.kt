@@ -30,4 +30,7 @@ abstract class OrderDao: BaseDao<OrderEntity>("OrderEntity") {
 
     @Query("SELECT * FROM OrderEntity WHERE orderStatus = 5 AND (synced = 0 OR updatedAt > :updatedAt) ORDER BY createdAt ASC")
     abstract fun getUnSyncedOrder(updatedAt: Long): Flow<List<OrderEntity>>
+
+    @Query("UPDATE OrderEntity SET updatedAt = :timestamp WHERE id = :id")
+    abstract fun setUpdatedAt(id: String, timestamp: Long = System.currentTimeMillis())
 }

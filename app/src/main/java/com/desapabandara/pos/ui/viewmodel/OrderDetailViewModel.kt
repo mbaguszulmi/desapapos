@@ -8,6 +8,7 @@ import co.mbznetwork.android.base.eventbus.FragmentStateEventBus
 import co.mbznetwork.android.base.util.DateUtil
 import com.desapabandara.pos.base.eventbus.OrderPrintEventBus
 import com.desapabandara.pos.base.manager.OrderManager
+import com.desapabandara.pos.base.model.ItemStatus
 import com.desapabandara.pos.base.model.Order
 import com.desapabandara.pos.base.model.OrderPrintJob
 import com.desapabandara.pos.base.model.OrderStatus
@@ -64,6 +65,10 @@ class OrderDetailViewModel @Inject constructor(
         it?.staff?.name ?: "-"
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
 
+    val waiterName = order.map {
+        it?.waiter?.name ?: "-"
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
+
     val customerName = order.map {
         it?.customerName ?: "-"
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
@@ -97,12 +102,15 @@ class OrderDetailViewModel @Inject constructor(
             with(item) {
                 sequence {
                     yield(
-                        OrderItemDisplay.Item(
+                        OrderItemDisplay.ItemDetailed(
                         id,
                         name,
                         currencyUtil.getCurrentFormat((priceExcludingTax + tax) * quantity),
                         quantity.toInt().toString(),
-                        isTakeaway
+                        isTakeaway,
+                        canChangeStatus = staffs.isNotEmpty() && status.id <= ItemStatus.Served.id,
+                        isPrepared = status.id >= ItemStatus.Prepared.id,
+                        isServed = status.id >= ItemStatus.Served.id
                     ))
 
                     if (itemNote.isNotBlank()) {
@@ -146,5 +154,25 @@ class OrderDetailViewModel @Inject constructor(
 
     fun dismiss() {
         fragmentStateEventBus.currentStateFinished()
+    }
+
+    fun toggleItemPrepared(item: OrderItemDisplay.ItemDetailed) {
+        viewModelScope.launch(ioDispatcher) {
+            if (!item.canChangeStatus || item.isServed) return@launch
+
+            order.value?.id?.let {
+                orderManager.updateOrderItemStatus(it, item.id, if (item.isPrepared) ItemStatus.Sent else ItemStatus.Prepared)
+            }
+        }
+    }
+
+    fun toggleItemServed(item: OrderItemDisplay.ItemDetailed) {
+        viewModelScope.launch(ioDispatcher) {
+            if (!item.canChangeStatus || !item.isPrepared) return@launch
+
+            order.value?.id?.let {
+                orderManager.updateOrderItemStatus(it, item.id, if (item.isServed) ItemStatus.Prepared else ItemStatus.Served)
+            }
+        }
     }
 }
