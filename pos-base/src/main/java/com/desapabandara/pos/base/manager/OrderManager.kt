@@ -218,6 +218,7 @@ class OrderManager @Inject constructor(
                         OrderWaiter(id, name)
                     }
                 } else null,
+                isNewCustomer
             )
         }
     }
@@ -634,7 +635,8 @@ class OrderManager @Inject constructor(
         adultMaleCount: Int,
         adultFemaleCount: Int,
         childMaleCount: Int,
-        childFemaleCount: Int
+        childFemaleCount: Int,
+        isNewCustomer: Boolean
     ) {
         scope?.launch {
             currentOrder.value?.let {
@@ -646,6 +648,7 @@ class OrderManager @Inject constructor(
                     this.adultFemaleCount = adultFemaleCount
                     this.childMaleCount = childMaleCount
                     this.childFemaleCount = childFemaleCount
+                    this.isNewCustomer = isNewCustomer
                 })
             }
         }

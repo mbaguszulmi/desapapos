@@ -131,7 +131,7 @@ class PosViewModel @Inject constructor(
         val result = fragmentStateEventBus.awaitStateResult<CustomerSetResult>()
 
         if (result is CustomerSetResult.Added) {
-            orderManager.addCustomer(result.id, result.name, result.phoneNumber, result.adultMaleCount, result.adultFemaleCount, result.childMaleCount, result.childFemaleCount)
+            orderManager.addCustomer(result.id, result.name, result.phoneNumber, result.adultMaleCount, result.adultFemaleCount, result.childMaleCount, result.childFemaleCount, result.isNewCustomer)
         }
     }
 

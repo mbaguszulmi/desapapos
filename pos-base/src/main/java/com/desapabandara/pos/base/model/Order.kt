@@ -43,6 +43,7 @@ data class Order(
     var customer: OrderCustomer?,
     var waiterId: String,
     var waiter: OrderWaiter?,
+    var isNewCustomer: Boolean = true
 )
 
 data class OrderWaiter(

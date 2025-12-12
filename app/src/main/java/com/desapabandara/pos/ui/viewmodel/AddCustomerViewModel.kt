@@ -24,6 +24,7 @@ class AddCustomerViewModel @Inject constructor(
     val adultFemaleCount = MutableStateFlow(0)
     val childMaleCount = MutableStateFlow(0)
     val childFemaleCount = MutableStateFlow(0)
+    val isNewCustomer = MutableStateFlow(true)
 
     init {
         populateFields()
@@ -38,6 +39,7 @@ class AddCustomerViewModel @Inject constructor(
                 adultFemaleCount.value = order.adultFemaleCount
                 childMaleCount.value = order.childMaleCount
                 childFemaleCount.value = order.childFemaleCount
+                isNewCustomer.value = order.isNewCustomer
             }
         }
     }
@@ -51,8 +53,15 @@ class AddCustomerViewModel @Inject constructor(
                 adultMaleCount.value,
                 adultFemaleCount.value,
                 childMaleCount.value,
-                childFemaleCount.value
+                childFemaleCount.value,
+                isNewCustomer.value
             ))
+        }
+    }
+
+    fun toggleNewCustomer() {
+        viewModelScope.launch(ioDispatcher) {
+            isNewCustomer.value = !isNewCustomer.value
         }
     }
 

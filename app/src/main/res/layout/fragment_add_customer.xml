@@ -160,6 +160,26 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <CheckBox
+            android:id="@+id/new_customer_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Customer"
+            app:layout_constraintTop_toBottomOf="@id/child_male_layout"
+            app:layout_constraintStart_toStartOf="@id/child_male_layout"
+            android:layout_marginTop="8dp"
+            android:checked="@{vm.isNewCustomer}"/>
+
+        <View
+            android:id="@+id/new_customer_btn"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@id/new_customer_checkbox"
+            app:layout_constraintBottom_toBottomOf="@id/new_customer_checkbox"
+            app:layout_constraintStart_toStartOf="@id/new_customer_checkbox"
+            app:layout_constraintEnd_toEndOf="@id/new_customer_checkbox"
+            android:onClick="@{() -> vm.toggleNewCustomer()}"/>
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

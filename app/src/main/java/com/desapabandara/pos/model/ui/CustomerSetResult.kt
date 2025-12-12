@@ -11,5 +11,6 @@ sealed class CustomerSetResult {
         val adultFemaleCount: Int,
         val childMaleCount: Int,
         val childFemaleCount: Int,
+        val isNewCustomer: Boolean
     ): CustomerSetResult()
 }

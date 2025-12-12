@@ -124,6 +124,7 @@ class OrderSyncManager @Inject constructor(
                                 null,
                                 Date(updatedAt),
                                 waiterId = waiterId,
+                                isNewCustomer = isNewCustomer,
                                 orderStatusChanges = orderStatusChanges.map { statusChange ->
                                     with(statusChange) {
                                         OrderStatusChangeRequest(

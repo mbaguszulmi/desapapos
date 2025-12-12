@@ -67,6 +67,8 @@ data class OrderRequest(
     var table: OrderTableRequest? = null,
     @SerializedName("waiter_id")
     var waiterId: String = "",
+    @SerializedName("is_new_customer")
+    var isNewCustomer: Boolean = true,
     @SerializedName("order_status_changes")
     var orderStatusChanges: List<OrderStatusChangeRequest> = emptyList(),
 )

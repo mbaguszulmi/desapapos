@@ -62,7 +62,7 @@ const val DESAPA_DB = "desapa.db"
         OrderStatusChangesEntity::class,
         StaffLocationAssignmentEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class DesapaDB: RoomDatabase() {

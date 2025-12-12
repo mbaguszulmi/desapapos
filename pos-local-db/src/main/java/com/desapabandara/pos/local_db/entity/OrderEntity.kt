@@ -31,6 +31,7 @@ data class OrderEntity(
     var customerName: String,
     var orderNote: String,
     var waiterId: String,
+    var isNewCustomer: Boolean = true,
     override var createdAt: Long = System.currentTimeMillis(),
     override var deletedAt: Long? = null,
     override var updatedAt: Long = System.currentTimeMillis(),

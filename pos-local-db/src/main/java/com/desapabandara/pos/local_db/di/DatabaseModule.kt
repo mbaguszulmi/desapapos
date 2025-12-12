@@ -6,6 +6,7 @@ import com.desapabandara.pos.local_db.database.DESAPA_DB
 import com.desapabandara.pos.local_db.database.DesapaDB
 import com.desapabandara.pos.local_db.database.MIGRATION_1_2
 import com.desapabandara.pos.local_db.database.MIGRATION_2_3
+import com.desapabandara.pos.local_db.database.MIGRATION_3_4
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +23,8 @@ object DatabaseModule {
         @ApplicationContext context: Context
     ) = Room.databaseBuilder(context, DesapaDB::class.java, DESAPA_DB).addMigrations(
         MIGRATION_1_2,
-        MIGRATION_2_3
+        MIGRATION_2_3,
+        MIGRATION_3_4
     ).build()
 
     @Provides
