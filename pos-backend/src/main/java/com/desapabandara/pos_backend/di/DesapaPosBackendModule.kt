@@ -29,12 +29,18 @@ object DesapaPosBackendModule {
     ): Interceptor {
         return Interceptor { chain ->
             val token = authEventBus.currentToken.value
-            if (token.isBlank()) {
+            val response = if (token.isBlank()) {
                 chain.proceed(chain.request())
             } else {
                 chain.proceed(chain.request()
                     .newBuilder().header("Authorization", "Bearer $token").build())
             }
+
+            if (response.code == 401) {
+                authEventBus.requestLogout()
+            }
+
+            response
         }
     }
 

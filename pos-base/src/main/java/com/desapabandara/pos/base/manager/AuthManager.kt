@@ -22,6 +22,21 @@ class AuthManager @Inject constructor(
     private val scope: CoroutineScope = CoroutineScope(ioDispatcher + SupervisorJob())
 
     fun observeLogin() {
+        observeAuth()
+        observeLogoutRequest()
+    }
+
+    private fun observeLogoutRequest() {
+        scope.launch {
+            authEventBus.logoutRequest.collect { logoutRequested ->
+                if (logoutRequested) {
+                    logout()
+                }
+            }
+        }
+    }
+
+    private fun observeAuth() {
         scope.launch {
             combine(
                 authDataStore.getToken(),

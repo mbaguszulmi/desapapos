@@ -46,7 +46,7 @@ android {
         create("dev") {
             dimension = "environment"
 
-            buildConfigField("String", "POS_BASE_URL", "\"http://192.168.1.6:8080/api/\"")
+            buildConfigField("String", "POS_BASE_URL", "\"http://192.168.1.5:8080/api/\"")
         }
 
         create("live") {
