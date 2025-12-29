@@ -48,6 +48,7 @@ class OrderPrintParser @Inject constructor(
             .parseOrderSubtotal(order)
             .parseOrderTax(order)
             .parseOrderDiscount(order)
+            .parsePaymentHistory(order)
             .parseOrderTotal(order)
             .parseOrderCustomer(order)
             .parseLocationName(location)
@@ -162,6 +163,45 @@ class OrderPrintParser @Inject constructor(
             }
 
             text.replaceRange(rangeStart, rangeEnd, discountText)
+        }
+    }
+
+    private fun String.parsePaymentHistory(order: Order): String {
+        return parseTemplateTag("PAYMENT_HISTORY") { text, range, attrs ->
+            val rangeStart = range.first
+            var rangeEnd = range.last+1
+
+            var totalAmountTendered = .0
+            var paymentHistoryText = buildString {
+                for (payment in order.orderPayments) {
+                    val paymentLine = "[L]${payment.paymentMethod.name}[R]${currencyUtil.getCurrentFormat(payment.amount)}\n"
+                    append(paymentLine)
+                    totalAmountTendered += payment.amount
+                }
+            }
+
+            val change = (totalAmountTendered - order.total)
+
+            if (change <= 0) {
+                paymentHistoryText = paymentHistoryText.replaceLast("\n", "")
+            } else {
+                paymentHistoryText += "[L]Change[R]${currencyUtil.getCurrentFormat(change)}"
+            }
+
+            if (paymentHistoryText.isBlank()) {
+                if (rangeEnd < text.length) {
+                    if (text[rangeEnd] == '\r') {
+                        rangeEnd++
+                        if (rangeEnd < text.length && text[rangeEnd] == '\n') {
+                            rangeEnd++
+                        }
+                    } else if (text[rangeEnd] == '\n') {
+                        rangeEnd++
+                    }
+                }
+            }
+
+            text.replaceRange(rangeStart, rangeEnd, paymentHistoryText)
         }
     }
 

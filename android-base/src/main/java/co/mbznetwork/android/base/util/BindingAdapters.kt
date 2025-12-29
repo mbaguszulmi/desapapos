@@ -42,3 +42,14 @@ fun setImageUrl(imageView: ImageView, url: String, isCenterCrop: Boolean = false
         }
     }
 }
+
+@BindingAdapter("android:src")
+fun setImageViewResource(imageView: ImageView, resourceId: Int) {
+    // You can add logic here, for instance, checking if the resourceId is valid
+    if (resourceId != 0) { // Assuming 0 means no image
+        imageView.setImageResource(resourceId)
+    } else {
+        // Set a placeholder or clear the image
+        imageView.setImageDrawable(null)
+    }
+}

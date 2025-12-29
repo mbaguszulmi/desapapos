@@ -85,6 +85,13 @@ data class OrderPayment(
     var createdAt: Date,
     var deletedAt: Date? = null,
     var updatedAt: Date,
+    var paymentMethod: PaymentMethod,
+)
+
+data class PaymentMethod(
+    var id: String,
+    var name: String,
+    var paymentMethodType: PaymentMethodType,
 )
 
 data class OrderTable(

@@ -76,7 +76,7 @@ abstract class NumPadViewModel(
                     return@launch
                 }
 
-                val numStr = numberStr.value + number.toString()
+                val numStr = _number.value.toString() + number.toString()
                 _number.value = numStr.toInt()
             }
         }
@@ -100,7 +100,7 @@ abstract class NumPadViewModel(
                         return@launch
                     }
 
-                    val numStr = numberStr.value + number
+                    val numStr = _number.value.toString() + number
                     _number.value = numStr.toInt()
                 }
             } catch (e: Throwable) {
@@ -145,6 +145,29 @@ abstract class NumPadViewModel(
             _number.value = 0
             _text.value = ""
             dotReached = false
+        }
+    }
+
+    fun setInitialNumber(number: Number) {
+        viewModelScope.launch(ioDispatcher) {
+            when (numberType) {
+                NumberType.Integer -> {
+                    _number.value = number.toInt()
+                }
+                NumberType.Decimal -> {
+                    val parts = number.toString().split(".")
+                    _number.value = parts[0].toInt()
+                    if (parts.size > 1) {
+                        _floatValue.value = parts[1].toInt()
+                        if (_floatValue.value > 0) {
+                            dotReached = true
+                        }
+                    }
+                }
+                NumberType.IntText -> {
+                    _text.value = number.toInt().toString()
+                }
+            }
         }
     }
 

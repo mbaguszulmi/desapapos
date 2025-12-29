@@ -7,6 +7,7 @@ import co.mbznetwork.android.base.model.UiMessage
 import co.mbznetwork.android.base.model.UiStatus
 import co.mbznetwork.android.base.util.DateUtil
 import com.desapabandara.pos.base.R
+import com.desapabandara.pos.base.eventbus.OrderPaymentEventBus
 import com.desapabandara.pos.base.eventbus.OrderPrintEventBus
 import com.desapabandara.pos.base.eventbus.StaffLoginEventBus
 import com.desapabandara.pos.base.model.ItemInfo
@@ -29,10 +30,13 @@ import com.desapabandara.pos.local_db.entity.OrderTableEntity
 import com.desapabandara.pos.base.model.Order
 import com.desapabandara.pos.base.model.OrderItem
 import com.desapabandara.pos.base.model.OrderPayment
+import com.desapabandara.pos.base.model.OrderPaymentEvent
 import com.desapabandara.pos.base.model.OrderPrintJob
 import com.desapabandara.pos.base.model.OrderStaff
 import com.desapabandara.pos.base.model.OrderTable
 import com.desapabandara.pos.base.model.OrderWaiter
+import com.desapabandara.pos.base.model.PaymentMethod
+import com.desapabandara.pos.base.model.PaymentMethodType
 import com.desapabandara.pos.base.model.Table
 import com.desapabandara.pos.local_db.dao.ItemStaffDao
 import com.desapabandara.pos.local_db.dao.ItemStatusChangesDao
@@ -84,6 +88,7 @@ class OrderManager @Inject constructor(
     private val orderStatusChangesDao: OrderStatusChangesDao,
     private val orderPrintEventBus: OrderPrintEventBus,
     private val staffLoginEventBus: StaffLoginEventBus,
+    private val orderPaymentEventBus: OrderPaymentEventBus,
     @DeviceID private val deviceId: String
 ) {
     private var scope: CoroutineScope? = null
@@ -100,6 +105,8 @@ class OrderManager @Inject constructor(
                 }
             }
         }
+
+        monitorOrderPayments()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -204,6 +211,17 @@ class OrderManager @Inject constructor(
                             Date(createdAt),
                             deletedAt?.let { d -> Date(d) },
                             Date(updatedAt),
+                            paymentMethodDao.getPaymentMethod(paymentMethodId)?.run {
+                                PaymentMethod(
+                                    id,
+                                    name,
+                                    PaymentMethodType.fromId(paymentMethodType)
+                                )
+                            } ?: PaymentMethod(
+                                "0",
+                                "Unknown",
+                                PaymentMethodType.Other
+                            )
                         )
                     }
                 },
@@ -533,49 +551,107 @@ class OrderManager @Inject constructor(
     private fun isOrderHasBeenSent() =
         currentOrder.value?.orderItems?.any { it.status == ItemStatus.Sent } ?: false
 
-    fun payOrder() {
+    fun canPayOrder(): Boolean {
+        return currentOrder.value?.let {
+            if (it.waiterId.isBlank() || it.waiterId == "0") {
+                uiStatusEventBus.setUiStatus(UiStatus.ShowError(
+                    UiMessage.ResourceMessage(R.string.select_waiter_error)
+                ))
+                return@let false
+            }
+
+            true
+        } ?: false
+    }
+
+    private fun processPayment(payment: OrderPaymentEvent.Settled) {
         scope?.launch {
             currentOrder.value?.let {
-                if (it.waiterId.isBlank() || it.waiterId == "0") {
-                    uiStatusEventBus.setUiStatus(UiStatus.ShowError(
-                        UiMessage.ResourceMessage(R.string.select_waiter_error)
-                    ))
-                    return@launch
-                }
+                if (it.id != payment.orderId) return@launch
 
-                orderDao.getOrderById(it.id)?.apply order@ {
+                orderDao.getOrderById(payment.orderId)?.apply order@ {
                     val defaultPaymentMethod = paymentMethodDao.getFirstPaymentMethod()
                     val orderHasBeenSent = isOrderHasBeenSent()
 
                     orderPaymentDao.save(
                         OrderPaymentEntity(
                             UUID.randomUUID().toString(),
-                            it.id,
-                            defaultPaymentMethod?.id ?: "1",
-                            it.total,
-                            UUID.randomUUID().toString()
+                            id,
+                            payment.paymentMethod.id,
+                            payment.amount,
+                            payment.referenceNumber
                         )
                     )
 
-                    orderStatus = OrderStatus.Completed.id
-                    paymentStatus = PaymentStatus.Settled.id
+                    if (it.total <= payment.amount) {
+                        orderStatus = OrderStatus.Completed.id
+                        paymentStatus = PaymentStatus.Settled.id
+                        totalAmountTendered = orderPaymentDao.getTotalPaidAmountForOrder(payment.orderId)
+                        changeRequired = totalAmountTendered - it.total
 
-                    if (!orderHasBeenSent) {
-                        createdAt = System.currentTimeMillis()
-                    }
-
-                    orderDao.update(this)
-                    addOrderStatusChange(it.id, OrderStatus.Completed)
-
-                    orderPrintEventBus.publishJob(OrderPrintJob(
-                        it.apply {
-                            orderStatus = OrderStatus.Completed
-                            paymentStatus = PaymentStatus.Settled
-                            this.createdAt = Date(this@order.createdAt)
+                        if (!orderHasBeenSent) {
+                            createdAt = System.currentTimeMillis()
                         }
-                    ))
+                        orderDao.update(this)
+                        addOrderStatusChange(it.id, OrderStatus.Completed)
 
-                    markItemsSentAndPrinted(it.id)
+                        orderPrintEventBus.publishJob(OrderPrintJob(
+                            it.apply {
+                                orderStatus = OrderStatus.Completed
+                                paymentStatus = PaymentStatus.Settled
+                                this.createdAt = Date(this@order.createdAt)
+                                orderPayments = orderPaymentDao.getOrderPaymentsByOrder(it.id).map { op ->
+                                    with(op) {
+                                        OrderPayment(
+                                            id,
+                                            paymentMethodId,
+                                            amount,
+                                            referenceNumber,
+                                            Date(createdAt),
+                                            deletedAt?.let { d -> Date(d) },
+                                            Date(updatedAt),
+                                            paymentMethodDao.getPaymentMethod(paymentMethodId)
+                                                ?.run {
+                                                    PaymentMethod(
+                                                        id,
+                                                        name,
+                                                        PaymentMethodType.fromId(paymentMethodType)
+                                                    )
+                                                } ?: PaymentMethod(
+                                                "0",
+                                                "Unknown",
+                                                PaymentMethodType.Other
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        ))
+
+                        markItemsSentAndPrinted(it.id)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun monitorOrderPayments() {
+        scope?.launch {
+            orderPaymentEventBus.orderPaymentEvent.collect {
+                val currentOrderId = currentOrder.value?.id ?: return@collect
+
+                when (it) {
+                    is OrderPaymentEvent.Settled -> {
+                        processPayment(it)
+                    }
+                    is OrderPaymentEvent.Failed -> {
+                        if (it.orderId != currentOrderId) return@collect
+
+                        uiStatusEventBus.setUiStatus(UiStatus.ShowError(
+                            UiMessage.StringMessage(it.errorMessage)
+                        ))
+                    }
+                    else -> {}
                 }
             }
         }

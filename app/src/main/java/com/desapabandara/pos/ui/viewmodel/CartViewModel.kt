@@ -10,6 +10,7 @@ import com.desapabandara.pos.base.util.CurrencyUtil
 import com.desapabandara.pos.local_db.dao.OrderItemDao
 import com.desapabandara.pos.model.ui.ItemDetailsResult
 import com.desapabandara.pos.ui.fragment.ItemDetailsFragment
+import com.desapabandara.pos.ui.fragment.PaymentFragment
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -86,7 +87,11 @@ class CartViewModel @Inject constructor(
     }
 
     fun payOrder() {
-        orderManager.payOrder()
+        viewModelScope.launch(ioDispatcher) {
+            if (orderManager.canPayOrder()) {
+                fragmentStateEventBus.setCurrentState(PaymentFragment())
+            }
+        }
     }
 
     fun removeItem(id: String) {

@@ -32,6 +32,8 @@ data class OrderEntity(
     var orderNote: String,
     var waiterId: String,
     var isNewCustomer: Boolean = true,
+    var totalAmountTendered: Double = .0,
+    var changeRequired: Double = .0,
     override var createdAt: Long = System.currentTimeMillis(),
     override var deletedAt: Long? = null,
     override var updatedAt: Long = System.currentTimeMillis(),

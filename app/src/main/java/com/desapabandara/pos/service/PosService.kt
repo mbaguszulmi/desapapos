@@ -6,6 +6,7 @@ import co.mbznetwork.android.base.NetworkStatusManager
 import co.mbznetwork.android.base.service.AppService
 import com.desapabandara.pos.base.eventbus.StoreLoginEventBus
 import com.desapabandara.pos.base.manager.OrderManager
+import com.desapabandara.pos.base.manager.OrderPaymentManager
 import com.desapabandara.pos.printer.manager.PrinterManager
 import com.desapabandara.pos.sync.manager.OrderSyncManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,6 +25,9 @@ class PosService: AppService() {
 
     @Inject
     lateinit var orderManager: OrderManager
+
+    @Inject
+    lateinit var orderPaymentManager: OrderPaymentManager
 
     @Inject
     lateinit var networkStatusManager: NetworkStatusManager
@@ -69,12 +73,14 @@ class PosService: AppService() {
 
     private fun startServices() {
         orderManager.start()
+        orderPaymentManager.start()
         orderSyncManager.start()
         printerManager.start()
     }
 
     private fun stopServices() {
         orderManager.stop()
+        orderPaymentManager.stop()
         orderSyncManager.stop()
         printerManager.stop()
     }

@@ -12,4 +12,7 @@ abstract class OrderPaymentDao: BaseDao<OrderPaymentEntity>("OrderPaymentEntity"
 
     @Query("SELECT * FROM OrderPaymentEntity WHERE orderId = :id")
     abstract suspend fun getOrderPaymentsByOrder(id: String): List<OrderPaymentEntity>
+
+    @Query("SELECT IFNULL(SUM(amount), 0) FROM OrderPaymentEntity WHERE orderId = :orderId")
+    abstract suspend fun getTotalPaidAmountForOrder(orderId: String): Double
 }
