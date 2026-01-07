@@ -56,7 +56,7 @@ class PaymentFragment : Fragment(), FragmentKtx {
             lifecycleOwner = viewLifecycleOwner
             numVM = paymentViewModel
             topBar.apply {
-                tvTitle.text = getString(R.string.payment)
+                title = getString(R.string.payment)
                 ivMenuBack.setOnClickListener { paymentViewModel.cancel() }
             }
             rvPaymentMethods.apply {

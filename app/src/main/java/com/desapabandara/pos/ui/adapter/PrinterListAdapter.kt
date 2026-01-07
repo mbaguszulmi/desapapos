@@ -11,7 +11,8 @@ import com.desapabandara.pos.model.ui.PrinterDisplay
 class PrinterListAdapter(
     private val onPrinterConnect: (String) -> Unit,
     private val onPrintTestPage: (String) -> Unit,
-    private val onDeletePrinter: (String) -> Unit
+    private val onDeletePrinter: (String) -> Unit,
+    private val onEditPrinter: (String) -> Unit
 ): ListAdapter<PrinterDisplay, PrinterListAdapter.PrinterViewHolder>(PRINTER_DIFF) {
     inner class PrinterViewHolder(
         private val binding: ItemPrinterBinding
@@ -32,6 +33,11 @@ class PrinterListAdapter(
 
                 btnRemoveItem.setOnClickListener {
                     onDeletePrinter(item.id)
+                    swipeView.close(true, false)
+                }
+
+                btnEditItem.setOnClickListener {
+                    onEditPrinter(item.id)
                     swipeView.close(true, false)
                 }
 

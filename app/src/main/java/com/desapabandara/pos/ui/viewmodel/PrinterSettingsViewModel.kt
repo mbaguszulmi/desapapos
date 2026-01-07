@@ -15,6 +15,7 @@ import com.desapabandara.pos.model.ui.PrinterDeviceScanResult
 import com.desapabandara.pos.model.ui.PrinterDisplay
 import com.desapabandara.pos.printer.manager.PrinterManager
 import com.desapabandara.pos.printer.model.PaperWidth
+import com.desapabandara.pos.ui.fragment.EditPrinterFragment
 import com.desapabandara.pos.ui.fragment.ScanPrinterFragment
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -75,7 +76,8 @@ class PrinterSettingsViewModel @Inject constructor(
                         it.id
                     }
 
-                    printerManager.addBluetoothPrinter(deviceConnection, deviceConnection.name, PaperWidth.W80, locations)
+                    val printerData = printerManager.addBluetoothPrinter(deviceConnection, deviceConnection.name, PaperWidth.W80, locations)
+                    fragmentStateEventBus.setCurrentState(EditPrinterFragment.newInstance(printerData), true)
                 }
             }
         }
@@ -91,6 +93,14 @@ class PrinterSettingsViewModel @Inject constructor(
 
     fun deletePrinter(id: String) {
         printerManager.deletePrinter(id)
+    }
+
+    fun editPrinter(it: String) {
+        viewModelScope.launch(ioDispatcher) {
+            printerDao.getPrinter(it)?.let {
+                fragmentStateEventBus.setCurrentState(EditPrinterFragment.newInstance(it), true)
+            }
+        }
     }
 
     fun dismiss() {

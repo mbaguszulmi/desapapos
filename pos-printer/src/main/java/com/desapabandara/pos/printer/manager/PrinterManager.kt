@@ -366,27 +366,27 @@ class PrinterManager @Inject constructor(
         }
     }
 
-    fun addBluetoothPrinter(printer: PrinterConnection, name: String, paperWidth: PaperWidth, locations: List<String>) {
-        scope?.launch {
-            val printerData = PrinterEntity(
+    suspend fun addBluetoothPrinter(printer: PrinterConnection, name: String, paperWidth: PaperWidth, locations: List<String>): PrinterEntity {
+        val printerData = PrinterEntity(
+            UUID.randomUUID().toString(),
+            name.ifBlank { printer.name },
+            printer.address,
+            paperWidth.width,
+            false,
+            1,
+        )
+
+        printerDao.save(printerData)
+
+        for (locationId in locations) {
+            printerLocationDao.save(PrinterLocationEntity(
                 UUID.randomUUID().toString(),
-                name.ifBlank { printer.name },
-                printer.address,
-                paperWidth.width,
-                false,
-                1,
-            )
-
-            printerDao.save(printerData)
-
-            for (locationId in locations) {
-                printerLocationDao.save(PrinterLocationEntity(
-                    UUID.randomUUID().toString(),
-                    printerData.id,
-                    locationId
-                ))
-            }
+                printerData.id,
+                locationId
+            ))
         }
+
+        return printerData
     }
 
     fun deletePrinter(id: String) {
