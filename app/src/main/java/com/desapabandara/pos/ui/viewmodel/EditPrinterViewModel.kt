@@ -125,7 +125,7 @@ class EditPrinterViewModel @Inject constructor(
 
     fun savePrinterData() {
         viewModelScope.launch(ioDispatcher) {
-            printerDao.save(printerData.value)
+            printerDao.update(printerData.value)
             fragmentStateEventBus.currentStateFinished()
         }
     }

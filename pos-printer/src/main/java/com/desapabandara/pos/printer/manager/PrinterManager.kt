@@ -2,6 +2,7 @@ package com.desapabandara.pos.printer.manager
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.util.Printer
 import co.mbznetwork.android.base.di.IoDispatcher
 import co.mbznetwork.android.base.eventbus.UIStatusEventBus
 import co.mbznetwork.android.base.model.UiMessage
@@ -11,7 +12,6 @@ import com.dantsu.escposprinter.EscPosPrinterCommands
 import com.dantsu.escposprinter.connection.DeviceConnection
 import com.dantsu.escposprinter.connection.bluetooth.BluetoothConnection
 import com.desapabandara.pos.base.eventbus.OrderPrintEventBus
-import com.desapabandara.pos.base.manager.OrderManager
 import com.desapabandara.pos.base.model.ItemStatus
 import com.desapabandara.pos.base.model.OrderStatus
 import com.desapabandara.pos.base.model.PrinterTemplateType
@@ -22,7 +22,6 @@ import com.desapabandara.pos.local_db.dao.PrinterTemplateDao
 import com.desapabandara.pos.local_db.dao.ProductDao
 import com.desapabandara.pos.local_db.entity.PrinterEntity
 import com.desapabandara.pos.local_db.entity.PrinterLocationEntity
-import com.desapabandara.pos.printer.R
 import com.desapabandara.pos.printer.model.PaperWidth
 import com.desapabandara.pos.printer.model.PrintTask
 import com.desapabandara.pos.printer.model.PrinterConnection
@@ -57,8 +56,7 @@ class PrinterManager @Inject constructor(
     private val locationDao: LocationDao,
     private val printerTemplateDao: PrinterTemplateDao,
     private val orderPrintParser: OrderPrintParser,
-    private val orderManager: OrderManager,
-    private val uiStatusEventBus: UIStatusEventBus
+    private val uiStatusEventBus: UIStatusEventBus,
 ) {
     private var scope: CoroutineScope? = null
     private val mainPrinterDevices = mutableMapOf<String, PrinterDevice>()
@@ -68,7 +66,7 @@ class PrinterManager @Inject constructor(
     fun start() {
         scope = CoroutineScope(ioDispatcher + SupervisorJob())
         observeSavedDevices()
-        observePrinterConnectionStatus()
+//        observePrinterConnectionStatus()
         observePrintJob()
     }
 
@@ -192,16 +190,28 @@ class PrinterManager @Inject constructor(
                 printTasks.forEach { task ->
                     val parsedText = orderPrintParser.parseFromTask(task)
 
-                    if (!printFormatted(
-                        parsedText,
-                        task.printerDevice.printerData.id,
-                        if (task.printerTemplate.type != PrinterTemplateType.Docket.id) {
-                            0f
-                        } else {
-                            15f
-                        },
-                        task.printerTemplate.type == PrinterTemplateType.Receipt.id
-                    )) {
+                    try {
+                        task.printerDevice.connect()
+                        if (!printFormatted(
+                                parsedText,
+                                task.printerDevice.printerData.id,
+                                if (task.printerTemplate.type != PrinterTemplateType.Docket.id) {
+                                    0f
+                                } else {
+                                    15f
+                                },
+                                task.printerTemplate.type == PrinterTemplateType.Receipt.id
+                            )) {
+                            isSucceeded = false
+                        }
+                        task.printerDevice.disconnect()
+                    } catch (e: Throwable) {
+                        Timber.e(e, "Printing failed for task: $task")
+                        uiStatusEventBus.setUiStatus(
+                            UiStatus.ShowError(
+                                UiMessage.StringMessage("Printing failed for printer ${task.printerDevice.printerData.name}: ${e.message}")
+                            )
+                        )
                         isSucceeded = false
                     }
                 }
@@ -211,7 +221,7 @@ class PrinterManager @Inject constructor(
 
     private fun getPrinterDevicesByLocationId(locationId: String): List<PrinterDevice> {
         return mainPrinterDevices.values.filter {
-            it.locations.any { l -> l.id == locationId }
+            it.printerData.isConnected && it.locations.any { l -> l.id == locationId }
         }
     }
 
@@ -254,7 +264,7 @@ class PrinterManager @Inject constructor(
                 lastPrinterObservedDate = updatedLastObservedDate
 
                 for (printer in printers) {
-                    if (mainPrinterDevices.containsKey(printer.id) && printer.isConnected) {
+                    if (printer.isConnected) {
                         mainPrinterDevices[printer.id]?.let { device ->
                             val printerLocations = printerLocationDao.getPrinterLocationFromPrinter(printer.id)
 
@@ -264,36 +274,31 @@ class PrinterManager @Inject constructor(
                                 printer,
                                 printerLocations
                             )
-                        }
+                        } ?: run {
+                            if (printer.interfaceType == PrinterInterfaceType.Bluetooth.id) {
+                                val connectionResult = connectBluetoothPrinter(printer)
+                                if (connectionResult != null) {
+                                    val printerLocations = printerLocationDao.getPrinterLocationFromPrinter(printer.id)
+                                    val printerDevice = PrinterDevice(
+                                        connectionResult.first,
+                                        connectionResult.second,
+                                        printer,
+                                        printerLocations
+                                    )
+                                    printerDevice.printer.disconnect()
 
-                        continue
-                    }
+                                    mainPrinterDevices[printer.id] = printerDevice
+                                } else {
+                                    printerDao.update(printer.apply {
+                                        isConnected = false
+                                        updatedAt = updatedLastObservedDate
+                                    }, false)
+                                }
+                            }
 
-                    if (printer.interfaceType == PrinterInterfaceType.Bluetooth.id) {
-                        val connectionResult = connectBluetoothPrinter(printer)
-                        if (connectionResult != null) {
-                            val printerLocations = printerLocationDao.getPrinterLocationFromPrinter(printer.id)
-                            val printerDevice = PrinterDevice(
-                                connectionResult.first,
-                                connectionResult.second,
-                                printer,
-                                printerLocations
-                            )
-
-                            mainPrinterDevices[printer.id] = printerDevice
-                            printerDao.update(printer.apply {
-                                isConnected = true
-                                updatedAt = updatedLastObservedDate
-                            }, false)
-                        } else {
-                            printerDao.update(printer.apply {
-                                isConnected = false
-                                updatedAt = updatedLastObservedDate
-                            }, false)
+                            // TODO: other interfaces haven't implemented yet
                         }
                     }
-
-                    // TODO: other interfaces haven't implemented yet
                 }
             }
         }
@@ -338,31 +343,13 @@ class PrinterManager @Inject constructor(
             val printer = printerDao.getPrinter(printerId) ?: return@launch
 
             if (printer.isConnected) {
-                mainPrinterDevices[printer.id]?.printer?.disconnect()
-                return@launch
+                mainPrinterDevices.remove(printer.id)
             }
 
-            connectBluetoothPrinter(printer)?.let {
-                val printerLocations = printerLocationDao.getPrinterLocationFromPrinter(printer.id)
-                val printerDevice = PrinterDevice(
-                    it.first,
-                    it.second,
-                    printer,
-                    printerLocations
-                )
+            printerDao.update(printer.apply {
+                isConnected = !isConnected
+            })
 
-                mainPrinterDevices[printer.id] = printerDevice
-                printerDao.update(printer.apply {
-                    isConnected = true
-                })
-            } ?: run {
-                printerDao.update(printer.apply {
-                    isConnected = false
-                })
-                uiStatusEventBus.setUiStatus(UiStatus.ShowError(UiMessage.ResourceMessage(
-                    R.string.printer_connection_error
-                )))
-            }
         }
     }
 
@@ -372,7 +359,7 @@ class PrinterManager @Inject constructor(
             name.ifBlank { printer.name },
             printer.address,
             paperWidth.width,
-            false,
+            true,
             1,
         )
 
@@ -401,11 +388,23 @@ class PrinterManager @Inject constructor(
     fun printTestPage(printerId: String) {
         scope?.launch {
             val printerDevice = mainPrinterDevices[printerId] ?: return@launch
-            val text = "[C]TEST PAGE\n" +
-                    "[L]Name: ${printerDevice.printerData.name}\n" +
-                    "[L]Address: ${printerDevice.printerData.address}\n"
+            try {
+                printerDevice.connect()
+                val text = "[C]TEST PAGE\n" +
+                        "[L]Name: ${printerDevice.printerData.name}\n" +
+                        "[L]Address: ${printerDevice.printerData.address}\n"
 
-            printFormatted(text, printerId)
+                printFormatted(text, printerId)
+                printerDevice.disconnect()
+            } catch (e: Throwable) {
+                Timber.e(e, "Failed to print test page")
+                uiStatusEventBus.setUiStatus(
+                    UiStatus.ShowError(
+                        UiMessage.StringMessage("Failed to print test page: ${e.message}")
+                    )
+                )
+                return@launch
+            }
         }
     }
 
@@ -422,7 +421,7 @@ class PrinterManager @Inject constructor(
 
             escPosPrinter.printFormattedTextAndCut(text, feedMM)
             if (openCashBox) {
-                printerDevice.printer.connect().openCashBox()
+                printerDevice.printer.openCashBox()
             }
 
             true
@@ -430,6 +429,23 @@ class PrinterManager @Inject constructor(
             Timber.e(e, "Printing failed!")
             false
         }
+    }
+
+    private suspend fun PrinterDevice.connect() {
+        try {
+            printer.connect()
+        } catch (e: Throwable) {
+            Timber.e(e, "Error connecting printer ${printerData}: ${e.message}")
+            mainPrinterDevices.remove(printerData.id)
+            printerDao.update(printerData.apply {
+                isConnected = !isConnected
+            })
+            throw e
+        }
+    }
+
+    private fun PrinterDevice.disconnect() {
+        printer.disconnect()
     }
 
     fun stop() {
