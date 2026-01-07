@@ -36,7 +36,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPersonName"
-                android:imeOptions="actionNext"
+                android:imeOptions="actionDone"
                 android:maxLines="1"
                 android:hint="@string/printer_name"
                 android:text="@={vm.printerData.name}"/>
