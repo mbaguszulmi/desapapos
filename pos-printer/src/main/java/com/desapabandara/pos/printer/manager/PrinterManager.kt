@@ -2,7 +2,6 @@ package com.desapabandara.pos.printer.manager
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
-import android.util.Printer
 import co.mbznetwork.android.base.di.IoDispatcher
 import co.mbznetwork.android.base.eventbus.UIStatusEventBus
 import co.mbznetwork.android.base.model.UiMessage
