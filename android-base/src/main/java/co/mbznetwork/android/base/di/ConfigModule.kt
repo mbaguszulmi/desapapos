@@ -2,6 +2,7 @@ package co.mbznetwork.android.base.di
 
 import android.content.Context
 import android.provider.Settings
+import co.mbznetwork.android.base.model.DeviceType
 import co.mbznetwork.android.base.storage.AppDataStore
 import co.mbznetwork.android.base.util.GsonSanitizedTypeAdapterFactory
 import com.google.gson.Gson
@@ -48,5 +49,15 @@ object ConfigModule {
     @Singleton
     @DeviceID
     fun provideDeviceID(@ApplicationContext context: Context): String = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+
+    @Provides
+    @Singleton
+    fun provideDeviceType(@ApplicationContext context: Context): DeviceType {
+        val metrics = context.resources.displayMetrics
+        val widthInches = metrics.widthPixels / metrics.xdpi
+        val heightInches = metrics.heightPixels / metrics.ydpi
+        val diagonalInches = Math.sqrt((widthInches * widthInches + heightInches * heightInches).toDouble())
+        return if (diagonalInches >= 7.0) DeviceType.Tablet else DeviceType.Phone
+    }
 
 }

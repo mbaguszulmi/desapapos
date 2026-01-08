@@ -55,7 +55,7 @@ class CartFragment : Fragment() {
         binding.apply {
             lifecycleOwner = viewLifecycleOwner
             vm = cartViewModel
-            topBar.apply {
+            topBar?.apply {
                 title = getString(R.string.cart)
                 ivMenuBack.setOnClickListener {
                     cartViewModel.dismiss()

@@ -2,11 +2,13 @@ package com.desapabandara.pos.ui.activity
 
 import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.PopupWindow
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +22,7 @@ import co.mbznetwork.android.base.eventbus.FragmentState
 import co.mbznetwork.android.base.eventbus.FragmentStateEventBus
 import co.mbznetwork.android.base.eventbus.UIStatusEventBus
 import co.mbznetwork.android.base.extension.observeOnLifecycle
+import co.mbznetwork.android.base.model.DeviceType
 import co.mbznetwork.android.base.model.PopUpMessage
 import co.mbznetwork.android.base.model.UiMessage
 import co.mbznetwork.android.base.model.UiStatus
@@ -40,6 +43,7 @@ import com.desapabandara.pos.ui.fragment.SyncFragment
 import com.desapabandara.pos.ui.popup.MessagePopup
 import com.desapabandara.pos.ui.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 import javax.inject.Inject
 
 const val TOP_OPERATION_KEEP_TAG = "TOP_OPERATION_KEEP_TAG"
@@ -54,6 +58,9 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var fragmentStateEventBus: FragmentStateEventBus
+
+    @Inject
+    lateinit var deviceType: DeviceType
 
     private val mainViewModel by viewModels<MainViewModel>()
 
@@ -70,7 +77,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         (application as DesapaApp).startPosServices()
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        setupScreen()
 
         initViewBinding()
         observeUiStatus()
@@ -78,6 +86,32 @@ class MainActivity : AppCompatActivity() {
         observeActiveMainMenu()
         observeOpenDrawer()
         observeFragmentState()
+    }
+
+    private fun setupScreen() {
+        requestedOrientation = if (deviceType == DeviceType.Tablet) {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+
+        if (deviceType == DeviceType.Tablet)
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P || deviceType == DeviceType.Tablet) {
+            Timber.d("Enable full screen")
+            window.decorView.let { view ->
+                var systemUiVisibility: Int = view.getSystemUiVisibility()
+                val flags: Int = (View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+                systemUiVisibility = systemUiVisibility or flags
+                view.setSystemUiVisibility(systemUiVisibility)
+            }
+        }
     }
 
     private fun observeFragmentState() {

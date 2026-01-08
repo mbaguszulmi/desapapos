@@ -73,12 +73,11 @@ class PrinterSettingsFragment : Fragment() {
                 layoutManager = LinearLayoutManager(requireContext())
                 adapter = printerAdapter
             }
-
             btnAddPrinter.setOnClickListener {
                 launchPrinterScan()
             }
 
-            mainTopBar.apply {
+            mainTopBar?.apply {
                 title = getString(R.string.printer_settings)
                 ivMenuBack.setOnClickListener {
                     printerSettingsViewModel.dismiss()

@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import co.mbznetwork.android.base.extension.observeOnLifecycle
 import com.desapabandara.pos.databinding.FragmentSettingsBinding
 import com.desapabandara.pos.ui.viewmodel.MainViewModel
 import com.desapabandara.pos.ui.viewmodel.SettingsViewModel
@@ -30,6 +32,29 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initView()
+        observeSettingsFragment()
+    }
+
+    private fun observeSettingsFragment() {
+        observeOnLifecycle(Lifecycle.State.CREATED) {
+            settingsViewModel.settingsFragment.collect {
+                binding.settingsFragmentContainer?.apply {
+                    if (it != null) {
+                        if (childFragmentManager.findFragmentByTag(it::class.java.simpleName) == null) {
+                            childFragmentManager.beginTransaction()
+                                .replace(id, it, it::class.java.simpleName)
+                                .commitAllowingStateLoss()
+                        }
+                    } else {
+                        childFragmentManager.findFragmentById(id)?.let { existingFragment ->
+                            childFragmentManager.beginTransaction()
+                                .remove(existingFragment)
+                                .commitAllowingStateLoss()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun initView() {

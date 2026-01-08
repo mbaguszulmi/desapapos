@@ -75,7 +75,7 @@ class PosFragment : Fragment() {
 
             mainTopBar.menuVM = mainViewModel
 
-            orderSummaryButton.posVM = posViewModel
+            orderSummaryButton?.posVM = posViewModel
 
             categoryRv.apply {
                 layoutManager = LinearLayoutManager(requireContext())

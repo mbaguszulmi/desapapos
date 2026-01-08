@@ -96,6 +96,8 @@ class PaymentViewModel @Inject constructor(
                     return@collect
                 }
 
+                setInitialNumber(0)
+
                 fragmentStateEventBus.setCurrentState(SaleCompletedFragment.newInstance(
                     currentOrder.totalAmountTendered,
                     currentOrder.changeRequired
@@ -106,6 +108,8 @@ class PaymentViewModel @Inject constructor(
 
     fun selectPayment(paymentMethod: PaymentMethodDisplay) {
         viewModelScope.launch(ioDispatcher) {
+            if (!orderManager.canPayOrder()) return@launch
+
             val amountTendered = numberCombined.value.toDouble()
             val currentOrder = orderManager.currentOrder.value ?: return@launch
             val method = paymentMethodDao.getPaymentMethod(paymentMethod.id) ?: return@launch

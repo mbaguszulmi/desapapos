@@ -55,7 +55,7 @@ class PaymentFragment : Fragment(), FragmentKtx {
         binding.apply {
             lifecycleOwner = viewLifecycleOwner
             numVM = paymentViewModel
-            topBar.apply {
+            topBar?.apply {
                 title = getString(R.string.payment)
                 ivMenuBack.setOnClickListener { paymentViewModel.cancel() }
             }

@@ -54,7 +54,7 @@ class StaffAssignmentFragment : Fragment() {
     private fun initView() {
         binding.apply {
             lifecycleOwner = viewLifecycleOwner
-            mainTopBar.apply {
+            mainTopBar?.apply {
                 title = getString(R.string.staff_assignments)
                 ivMenuBack.setOnClickListener {
                     staffAssignmentViewModel.dismiss()
