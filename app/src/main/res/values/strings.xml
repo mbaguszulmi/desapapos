@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Desapa POS</string>
     <string name="syncing_data">Syncing data</string>
+    <string name="syncing_store_data">Syncing Store Data</string>
     <string name="syncing_product_categories">Syncing Product Categories</string>
     <string name="syncing_products">Syncing Products</string>
     <string name="syncing_staffs">Syncing Staffs</string>

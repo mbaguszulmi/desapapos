@@ -1,7 +1,10 @@
 package com.desapabandara.pos.printer.util
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import co.mbznetwork.android.base.extension.replaceLast
 import co.mbznetwork.android.base.util.DateUtil
+import com.dantsu.escposprinter.EscPosPrinter
 import com.desapabandara.pos.base.model.Order
 import com.desapabandara.pos.base.model.PaymentStatus
 import com.desapabandara.pos.base.util.CurrencyUtil
@@ -21,21 +24,24 @@ class OrderPrintParser @Inject constructor(
     private val authDataStore: AuthDataStore
 ) {
 
-    suspend fun parseFromTask(task: PrintTask): String {
+    suspend fun parseFromTask(task: PrintTask, printer: EscPosPrinter): String {
         val templateStr = task.printerTemplate.template
         val store = authDataStore.getCurrentStoreData().first() ?: return ""
+        val logoBase64 = authDataStore.getStoreLogoBase64().first()
 
-        return templateStr.parseTemplate(task.order, task.reprint, task.location, store, task.printerDevice.printerData)
+        return templateStr.parseTemplate(printer, task.order, task.reprint, task.location, store, task.printerDevice.printerData, logoBase64)
     }
 
     private fun String.parseTemplate(
+        printer: EscPosPrinter,
         order: Order,
         reprint: Boolean,
         location: LocationEntity,
         store: StoreResponse,
-        printerData: PrinterEntity
+        printerData: PrinterEntity,
+        logoBase64: String
     ): String {
-        return parseLogo()
+        return parseLogo(printer, logoBase64)
             .parseStoreName(store)
             .parseStoreAddress(store)
             .parseStorePhone(store)
@@ -57,8 +63,15 @@ class OrderPrintParser @Inject constructor(
             .parseDivider(printerData)
     }
 
-    private fun String.parseLogo(): String {
-        return replaceTemplateTag("LOGO", "")
+    private fun String.parseLogo(printer: EscPosPrinter, storeLogoBase64: String): String {
+        return parseTemplateTag("LOGO") { text, range, _ ->
+            if (storeLogoBase64.isBlank()) return@parseTemplateTag ""
+
+            val logoBytes = Base64.decode(storeLogoBase64, Base64.DEFAULT)
+            val logoBitmap = BitmapFactory.decodeByteArray(logoBytes, 0, logoBytes.size)
+
+            text.replaceRange(range, "<img>${imageBitmapToHex(printer, logoBitmap)}</img>")
+        }
     }
 
     private fun String.parseStoreName(store: StoreResponse): String {

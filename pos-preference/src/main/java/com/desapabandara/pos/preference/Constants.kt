@@ -3,6 +3,7 @@ package com.desapabandara.pos.preference
 const val AUTH_TOKEN_KEY = "AUTH_TOKEN_KEY"
 const val AUTH_REFRESH_TOKEN_KEY = "AUTH_REFRESH_TOKEN_KEY"
 const val AUTH_LOGGED_IN_STORE = "AUTH_LOGGED_IN_STORE"
+const val AUTH_STORE_LOGO_HEX = "AUTH_STORE_LOGO_HEX"
 
 const val SYNC_STATUS_KEY = "SYNC_STATUS_KEY"
 

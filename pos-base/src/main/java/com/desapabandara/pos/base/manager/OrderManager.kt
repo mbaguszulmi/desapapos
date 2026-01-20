@@ -3,6 +3,7 @@ package com.desapabandara.pos.base.manager
 import co.mbznetwork.android.base.di.DeviceID
 import co.mbznetwork.android.base.di.IoDispatcher
 import co.mbznetwork.android.base.eventbus.UIStatusEventBus
+import co.mbznetwork.android.base.extension.roundTo2DecimalPlaces
 import co.mbznetwork.android.base.model.UiMessage
 import co.mbznetwork.android.base.model.UiStatus
 import co.mbznetwork.android.base.util.DateUtil
@@ -334,8 +335,11 @@ class OrderManager @Inject constructor(
             expectedPreparingDuration += (it.preparingDuration * it.quantity.toInt())
         }
 
-        val totalExcludingTax = subtotalExcludingTax - discountExcludingTax + surchargeExcludingTax
-        val totalTax = subtotalTax - discountTax + surchargeTax
+        subtotalExcludingTax = subtotalExcludingTax.roundTo2DecimalPlaces()
+        subtotalTax = subtotalTax.roundTo2DecimalPlaces()
+
+        val totalExcludingTax = (subtotalExcludingTax - discountExcludingTax + surchargeExcludingTax).roundTo2DecimalPlaces()
+        val totalTax = (subtotalTax - discountTax + surchargeTax).roundTo2DecimalPlaces()
 
         orderDao.update(order.apply {
             this.subtotalExcludingTax = subtotalExcludingTax

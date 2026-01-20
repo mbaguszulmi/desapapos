@@ -176,26 +176,6 @@
             app:layout_constraintBottom_toBottomOf="@id/iv_send"
             app:layout_constraintStart_toEndOf="@id/send_center"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/payment"
-            android:textColor="@color/white"
-            android:layout_marginBottom="8dp"
-            android:fontFamily="sans-serif-medium"
-            app:layout_constraintBottom_toBottomOf="@id/btn_payment"
-            app:layout_constraintStart_toStartOf="@id/btn_payment"
-            app:layout_constraintEnd_toEndOf="@id/btn_payment"/>
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_payments"
-            app:layout_constraintTop_toTopOf="@id/btn_payment"
-            app:layout_constraintStart_toStartOf="@id/btn_payment"
-            app:layout_constraintEnd_toEndOf="@id/btn_payment"
-            android:layout_marginTop="8dp"/>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

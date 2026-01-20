@@ -184,35 +184,62 @@ class PrinterManager @Inject constructor(
                     } ?: emptyList()
                 }
 
+                val printDeviceTasks = printTasks.groupBy { it.printerDevice.printerData.id }
+
                 var isSucceeded = true
 
-                printTasks.forEach { task ->
-                    val parsedText = orderPrintParser.parseFromTask(task)
+                printDeviceTasks.forEach { (_, printTasks) ->
+                    val printerDevice = printTasks.firstOrNull()?.printerDevice ?: run {
+                        isSucceeded = false
+                        return@forEach
+                    }
+                    printerDevice.connect()
 
-                    try {
-                        task.printerDevice.connect()
-                        if (!printFormatted(
-                                parsedText,
-                                task.printerDevice.printerData.id,
-                                if (task.printerTemplate.type != PrinterTemplateType.Docket.id) {
-                                    0f
-                                } else {
-                                    15f
-                                },
-                                task.printerTemplate.type == PrinterTemplateType.Receipt.id
-                            )) {
+                    printTasks.forEach printTaskForeach@{ task ->
+                        try {
+
+                            val paperWidth = PaperWidth.fromWidth(task.printerDevice.printerData.paperWidth) ?: run {
+                                isSucceeded = false
+                                return@printTaskForeach
+                            }
+
+                            val escPosPrinter = EscPosPrinter(
+                                task.printerDevice.printer,
+                                180,
+                                paperWidth.width.toFloat(),
+                                paperWidth.characters
+                            )
+
+                            val parsedText = orderPrintParser.parseFromTask(task, escPosPrinter)
+
+                            if (!printFormatted(
+                                    parsedText,
+                                    escPosPrinter,
+                                    if (task.printerTemplate.type != PrinterTemplateType.Docket.id) {
+                                        0f
+                                    } else {
+                                        15f
+                                    },
+                                    task.printerTemplate.type == PrinterTemplateType.Receipt.id
+                                )) {
+                                isSucceeded = false
+                            }
+
+                            if (parsedText.contains("<img>")) {
+                                delay(650)
+                            }
+                        } catch (e: Throwable) {
+                            Timber.e(e, "Printing failed for task: $task")
+                            uiStatusEventBus.setUiStatus(
+                                UiStatus.ShowError(
+                                    UiMessage.StringMessage("Printing failed for printer ${task.printerDevice.printerData.name}: ${e.message}")
+                                )
+                            )
                             isSucceeded = false
                         }
-                        task.printerDevice.disconnect()
-                    } catch (e: Throwable) {
-                        Timber.e(e, "Printing failed for task: $task")
-                        uiStatusEventBus.setUiStatus(
-                            UiStatus.ShowError(
-                                UiMessage.StringMessage("Printing failed for printer ${task.printerDevice.printerData.name}: ${e.message}")
-                            )
-                        )
-                        isSucceeded = false
                     }
+
+                    printerDevice.disconnect()
                 }
             }
         }
@@ -393,7 +420,15 @@ class PrinterManager @Inject constructor(
                         "[L]Name: ${printerDevice.printerData.name}\n" +
                         "[L]Address: ${printerDevice.printerData.address}\n"
 
-                printFormatted(text, printerId)
+                val paperWidth = PaperWidth.fromWidth(printerDevice.printerData.paperWidth) ?: return@launch
+
+                val escPosPrinter = EscPosPrinter(
+                    printerDevice.printer,
+                    180,
+                    paperWidth.width.toFloat(),
+                    paperWidth.characters
+                )
+                printFormatted(text, escPosPrinter)
                 printerDevice.disconnect()
             } catch (e: Throwable) {
                 Timber.e(e, "Failed to print test page")
@@ -407,20 +442,12 @@ class PrinterManager @Inject constructor(
         }
     }
 
-    private fun printFormatted(text: String, printerId: String, feedMM: Float = 0f, openCashBox: Boolean = false): Boolean {
+    private fun printFormatted(text: String, printer: EscPosPrinter, feedMM: Float = 0f, openCashBox: Boolean = false): Boolean {
         return try {
-            val printerDevice = mainPrinterDevices[printerId] ?: return false
-            val paperWidth = PaperWidth.fromWidth(printerDevice.printerData.paperWidth) ?: return false
-            val escPosPrinter = EscPosPrinter(
-                printerDevice.printer,
-                203,
-                paperWidth.width.toFloat(),
-                paperWidth.characters
-            )
-
-            escPosPrinter.printFormattedTextAndCut(text, feedMM)
             if (openCashBox) {
-                printerDevice.printer.openCashBox()
+                printer.printFormattedTextAndOpenCashBox(text, feedMM)
+            } else {
+                printer.printFormattedTextAndCut(text, feedMM)
             }
 
             true
