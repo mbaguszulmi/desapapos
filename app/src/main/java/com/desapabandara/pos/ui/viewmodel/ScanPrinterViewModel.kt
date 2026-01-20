@@ -44,6 +44,6 @@ class ScanPrinterViewModel @Inject constructor(
     }
 
     fun dismiss() {
-        fragmentStateEventBus.currentStateFinished()
+        fragmentStateEventBus.currentStateFinished(PrinterDeviceScanResult.Cancelled)
     }
 }
